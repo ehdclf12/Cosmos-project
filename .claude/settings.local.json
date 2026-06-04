@@ -31,7 +31,9 @@
       "Bash(timeout 40 bash -c 'until curl -sf http://localhost:3000 >/dev/null 2>&1; do sleep 1; echo -n \".\"; done && echo \" ready\"')",
       "Bash(chromium-cli *)",
       "Bash(curl *)",
-      "Bash(gh repo *)"
+      "Bash(gh repo *)",
+      "Bash(git remote *)",
+      "Bash(git branch *)"
     ]
   }
 }
