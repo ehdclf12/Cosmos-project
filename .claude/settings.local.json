@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(~/.local/node/bin/npx jest *)",
+      "Bash(git add *)",
+      "Bash(git rm *)",
+      "Bash(git commit *)",
+      "Bash(~/.local/node/bin/npm test *)",
+      "Bash(~/.local/node/bin/npm install *)",
+      "Bash(git init *)",
+      "Bash(mkdir -p /Users/cosmos/Desktop/Cosmos/gym-app/app/api/members/\\\\[id\\\\])",
+      "Bash(mkdir -p /Users/cosmos/Desktop/Cosmos/gym-app/app/api/pt/\\\\[memberId\\\\])",
+      "Bash(mkdir -p \"/Users/cosmos/Desktop/Cosmos/gym-app/app/\\(dashboard\\)/members/[id]\")",
+      "Bash(mkdir -p /Users/cosmos/Desktop/Cosmos/gym-app/app/\\\\\\(dashboard\\\\\\)/pt/\\\\[id\\\\])",
+      "Bash(~/.local/node/bin/npx tsc *)",
+      "Read(//Users/cosmos/.local/node/bin/**)",
+      "Read(//opt/homebrew/bin/**)",
+      "Bash(PATH=\"$HOME/.local/node/bin:$PATH\" npx tsc *)",
+      "Bash(PATH=__TRACKED_VAR__/.local/node/bin:__TRACKED_VAR__ node -e 'const t = require\\('\\\\''/Users/cosmos/Desktop/Cosmos/gym-app/node_modules/@base-ui/react/dialog'\\\\''\\); console.log\\(Object.keys\\(t\\)\\)')",
+      "Bash(PATH=\"$HOME/.local/node/bin:$PATH\" npm run *)",
+      "Bash(~/.local/node/bin/npx prisma *)",
+      "Bash(/Users/cosmos/.local/node/bin/node *)",
+      "Bash(~/.local/node/bin/node *)",
+      "Bash(ln -sf ~/.local/node/bin/node /usr/local/bin/node)",
+      "Bash(mkdir -p ~/bin)",
+      "Bash(ln -sf ~/.local/node/bin/node ~/bin/node)",
+      "Read(//Users/cosmos/bin/**)",
+      "Bash(git push *)",
+      "Bash(timeout 40 bash -c 'until curl -sf http://localhost:3000 >/dev/null 2>&1; do sleep 1; echo -n \".\"; done && echo \" ready\"')",
+      "Bash(chromium-cli *)",
+      "Bash(curl *)",
+      "Bash(gh repo *)"
+    ]
+  }
+}
