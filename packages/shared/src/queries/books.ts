@@ -1,21 +1,21 @@
 import { SupabaseClient } from '@supabase/supabase-js'
 import type { BookStatus, UserBookWithBook, BookDetailResult } from '../types'
+import type { AddBookInput } from '../schemas'
 
 export async function fetchUserBooks(
   supabase: SupabaseClient,
   userId: string,
   status?: BookStatus
 ): Promise<UserBookWithBook[]> {
-  let query = supabase
+  const baseQuery = supabase
     .from('user_books')
     .select('*, book:books(*)')
     .eq('user_id', userId)
 
-  if (status) query = (query as any).eq('status', status)
-
-  const { data, error } = await (query as any).order('created_at', { ascending: false })
+  const finalQuery = status ? baseQuery.eq('status', status) : baseQuery
+  const { data, error } = await finalQuery.order('created_at', { ascending: false })
   if (error) throw error
-  return data
+  return data as UserBookWithBook[]
 }
 
 export async function fetchBookDetail(
@@ -34,17 +34,18 @@ export async function fetchBookDetail(
       .order('created_at', { ascending: false }),
   ])
   if (bookRes.error) throw bookRes.error
+  if (reviewsRes.error) throw reviewsRes.error
   return {
     book: bookRes.data,
     userBook: userBookRes.data ?? null,
-    reviews: (reviewsRes.data as any) ?? [],
+    reviews: reviewsRes.data ?? [],
   }
 }
 
 export async function addBook(
   supabase: SupabaseClient,
   userId: string,
-  data: { title: string; author: string; cover_url?: string; publisher?: string; published_year?: number }
+  data: AddBookInput
 ) {
   const { data: book, error } = await supabase
     .from('books')
