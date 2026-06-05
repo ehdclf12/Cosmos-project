@@ -46,7 +46,8 @@
       "Read(//Users/cosmos/.fnm/**)",
       "Bash(pnpm install *)",
       "Bash(npx pnpm *)",
-      "Bash(corepack enable *)"
+      "Bash(corepack enable *)",
+      "Bash(npx eslint *)"
     ]
   }
 }
