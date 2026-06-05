@@ -33,7 +33,20 @@
       "Bash(curl *)",
       "Bash(gh repo *)",
       "Bash(git remote *)",
-      "Bash(git branch *)"
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git *)",
+      "Bash(pnpm dlx *)",
+      "Bash(npm --version)",
+      "Read(//usr/local/bin/**)",
+      "Read(//Users/cosmos/.local/share/pnpm/**)",
+      "Read(//Users/cosmos/Library/pnpm/**)",
+      "Read(//usr/local/**)",
+      "Read(//Users/cosmos/.nvm/**)",
+      "Read(//Users/cosmos/.fnm/**)",
+      "Bash(pnpm install *)",
+      "Bash(npx pnpm *)",
+      "Bash(corepack enable *)"
     ]
   }
 }
