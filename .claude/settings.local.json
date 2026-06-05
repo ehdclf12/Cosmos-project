@@ -47,7 +47,9 @@
       "Bash(pnpm install *)",
       "Bash(npx pnpm *)",
       "Bash(corepack enable *)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(gh pr *)",
+      "Bash(brew list *)"
     ]
   }
 }
