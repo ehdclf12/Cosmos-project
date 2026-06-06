@@ -20,6 +20,8 @@ export default function TabLayout() {
       <Tabs.Screen name="books" options={{ title: '책장' }} />
       <Tabs.Screen name="clubs" options={{ title: '클럽' }} />
       <Tabs.Screen name="profile" options={{ title: '프로필' }} />
+      <Tabs.Screen name="clubs/[id]" options={{ href: null }} />
+      <Tabs.Screen name="clubs/new" options={{ href: null }} />
     </Tabs>
   )
 }
