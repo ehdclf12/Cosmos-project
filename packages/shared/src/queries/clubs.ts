@@ -42,6 +42,7 @@ export async function fetchClub(
     from('club_members').select('*', { count: 'exact', head: true } as any).eq('club_id', clubId).eq('status', 'active'),
   ])
   if (clubRes.error) throw clubRes.error
+  if (myMemberRes.error) throw myMemberRes.error
   if ((countRes as any).error) throw (countRes as any).error
   return {
     club: clubRes.data as Club,
@@ -105,7 +106,10 @@ export async function createClub(
   const { error: memberError } = await supabase
     .from('club_members')
     .insert({ club_id: (club as Club).id, user_id: userId, role: 'leader', status: 'active' })
-  if (memberError) throw memberError
+  if (memberError) {
+    await supabase.from('clubs').delete().eq('id', (club as Club).id)
+    throw memberError
+  }
   return club as Club
 }
 
@@ -137,7 +141,7 @@ export async function requestJoinClub(
     .select()
     .single()
   if (error) {
-    if (error.code === '23505') throw new Error('승인 대기 중입니다')
+    if (error.code === '23505') throw new Error('이미 가입되어 있거나 승인 대기 중입니다')
     throw error
   }
   return data as ClubMember
@@ -153,7 +157,10 @@ export async function joinByInviteCode(
     .select('id')
     .eq('invite_code', inviteCode)
     .single()
-  if (clubErr) throw new Error('유효하지 않은 초대 코드입니다')
+  if (clubErr) {
+    if (clubErr.code === 'PGRST116') throw new Error('유효하지 않은 초대 코드입니다')
+    throw clubErr
+  }
   return joinClub(supabase, userId, (club as { id: string }).id)
 }
 
@@ -172,7 +179,7 @@ export async function rejectMember(
   supabase: SupabaseClient,
   memberId: string
 ): Promise<void> {
-  const { error } = await supabase.from('club_members').delete().eq('id', memberId)
+  const { error } = await supabase.from('club_members').delete().eq('id', memberId).eq('status', 'pending')
   if (error) throw error
 }
 
@@ -192,7 +199,7 @@ export async function removeMember(
   supabase: SupabaseClient,
   memberId: string
 ): Promise<void> {
-  const { error } = await supabase.from('club_members').delete().eq('id', memberId)
+  const { error } = await supabase.from('club_members').delete().eq('id', memberId).eq('status', 'active')
   if (error) throw error
 }
 
