@@ -1,15 +1,20 @@
 import { fetchClubs, fetchMyClubs, fetchClub, fetchClubMembers, fetchClubPosts, fetchClubMeetups } from '../queries/clubs'
 
-const makeChain = (resolved: { data: unknown; error: unknown; count?: number }) => ({
-  select: jest.fn().mockReturnThis(),
-  eq: jest.fn().mockReturnThis(),
-  ilike: jest.fn().mockReturnThis(),
-  overlaps: jest.fn().mockReturnThis(),
-  order: jest.fn().mockReturnThis(),
-  range: jest.fn().mockResolvedValue(resolved),
-  single: jest.fn().mockResolvedValue(resolved),
-  maybeSingle: jest.fn().mockResolvedValue(resolved),
-})
+const makeChain = (resolved: { data: unknown; error: unknown; count?: number }) => {
+  const chain: any = {
+    select: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    ilike: jest.fn().mockReturnThis(),
+    overlaps: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    range: jest.fn().mockResolvedValue(resolved),
+    single: jest.fn().mockResolvedValue(resolved),
+    maybeSingle: jest.fn().mockResolvedValue(resolved),
+  }
+  chain.then = (resolve: Function, reject: Function) =>
+    Promise.resolve(resolved).then(resolve as any, reject as any)
+  return chain
+}
 
 const makeMock = (resolved: { data: unknown; error: unknown; count?: number }) => {
   const chain = makeChain(resolved)
