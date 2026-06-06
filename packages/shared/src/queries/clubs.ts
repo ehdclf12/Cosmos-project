@@ -90,3 +90,158 @@ export async function fetchClubMeetups(
   if (error) throw error
   return data as ClubMeetup[]
 }
+
+export async function createClub(
+  supabase: SupabaseClient,
+  userId: string,
+  data: CreateClubInput
+): Promise<Club> {
+  const { data: club, error } = await supabase
+    .from('clubs')
+    .insert({ ...data, created_by: userId })
+    .select()
+    .single()
+  if (error) throw error
+  const { error: memberError } = await supabase
+    .from('club_members')
+    .insert({ club_id: (club as Club).id, user_id: userId, role: 'leader', status: 'active' })
+  if (memberError) throw memberError
+  return club as Club
+}
+
+export async function joinClub(
+  supabase: SupabaseClient,
+  userId: string,
+  clubId: string
+): Promise<ClubMember> {
+  const { data, error } = await supabase
+    .from('club_members')
+    .insert({ club_id: clubId, user_id: userId, role: 'member', status: 'active' })
+    .select()
+    .single()
+  if (error) {
+    if (error.code === '23505') throw new Error('이미 가입된 클럽입니다')
+    throw error
+  }
+  return data as ClubMember
+}
+
+export async function requestJoinClub(
+  supabase: SupabaseClient,
+  userId: string,
+  clubId: string
+): Promise<ClubMember> {
+  const { data, error } = await supabase
+    .from('club_members')
+    .insert({ club_id: clubId, user_id: userId, role: 'member', status: 'pending' })
+    .select()
+    .single()
+  if (error) {
+    if (error.code === '23505') throw new Error('승인 대기 중입니다')
+    throw error
+  }
+  return data as ClubMember
+}
+
+export async function joinByInviteCode(
+  supabase: SupabaseClient,
+  userId: string,
+  inviteCode: string
+): Promise<ClubMember> {
+  const { data: club, error: clubErr } = await supabase
+    .from('clubs')
+    .select('id')
+    .eq('invite_code', inviteCode)
+    .single()
+  if (clubErr) throw new Error('유효하지 않은 초대 코드입니다')
+  return joinClub(supabase, userId, (club as { id: string }).id)
+}
+
+export async function approveMember(
+  supabase: SupabaseClient,
+  memberId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('club_members')
+    .update({ status: 'active' })
+    .eq('id', memberId)
+  if (error) throw error
+}
+
+export async function rejectMember(
+  supabase: SupabaseClient,
+  memberId: string
+): Promise<void> {
+  const { error } = await supabase.from('club_members').delete().eq('id', memberId)
+  if (error) throw error
+}
+
+export async function updateMemberRole(
+  supabase: SupabaseClient,
+  memberId: string,
+  role: ClubMemberRole
+): Promise<void> {
+  const { error } = await supabase
+    .from('club_members')
+    .update({ role })
+    .eq('id', memberId)
+  if (error) throw error
+}
+
+export async function removeMember(
+  supabase: SupabaseClient,
+  memberId: string
+): Promise<void> {
+  const { error } = await supabase.from('club_members').delete().eq('id', memberId)
+  if (error) throw error
+}
+
+export async function createPost(
+  supabase: SupabaseClient,
+  clubId: string,
+  authorId: string,
+  data: CreatePostInput
+): Promise<ClubPost> {
+  const { data: post, error } = await supabase
+    .from('club_posts')
+    .insert({ club_id: clubId, author_id: authorId, ...data })
+    .select('*, author:profiles(username, display_name, avatar_url), book:books(title, author, cover_url)')
+    .single()
+  if (error) throw error
+  return post as ClubPost
+}
+
+export async function deletePost(
+  supabase: SupabaseClient,
+  postId: string
+): Promise<void> {
+  const { error } = await supabase.from('club_posts').delete().eq('id', postId)
+  if (error) throw error
+}
+
+export async function createMeetup(
+  supabase: SupabaseClient,
+  clubId: string,
+  createdBy: string,
+  data: CreateMeetupInput
+): Promise<ClubMeetup> {
+  const { data: meetup, error } = await supabase
+    .from('club_meetups')
+    .insert({ club_id: clubId, created_by: createdBy, ...data })
+    .select()
+    .single()
+  if (error) throw error
+  return meetup as ClubMeetup
+}
+
+export async function updateAttendance(
+  supabase: SupabaseClient,
+  meetupId: string,
+  userId: string,
+  status: MeetupAttendanceStatus
+): Promise<void> {
+  const { error } = await supabase
+    .from('club_meetup_attendees')
+    .upsert({ meetup_id: meetupId, user_id: userId, status }, { onConflict: 'meetup_id,user_id' })
+  if (error) throw error
+}
