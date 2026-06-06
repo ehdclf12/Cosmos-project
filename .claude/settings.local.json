@@ -76,7 +76,8 @@
       "Bash(PATH=/Users/cosmos/.local/node/bin:__TRACKED_VAR__ npm test -- clubs.queries --no-coverage)",
       "Bash(PATH=/Users/cosmos/.local/node/bin:__TRACKED_VAR__ npx jest --no-coverage)",
       "Bash(PATH=\"$HOME/.local/node/bin:$PATH\" gh pr *)",
-      "Bash(security find-internet-password *)"
+      "Bash(security find-internet-password *)",
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" gh pr *)"
     ]
   }
 }
