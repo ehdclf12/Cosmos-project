@@ -54,7 +54,27 @@
       "Bash(pnpm --version)",
       "Bash(gh --version)",
       "Bash(npx --yes playwright --version)",
-      "Bash(python3 -c \"import playwright; print\\('ok'\\)\")"
+      "Bash(python3 -c \"import playwright; print\\('ok'\\)\")",
+      "Bash(pnpm exec *)",
+      "Bash(../../node_modules/.bin/tsc --noEmit)",
+      "Bash(zsh *)",
+      "Bash(npm run *)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Read(//opt/homebrew/**)",
+      "Read(//Users/cosmos/**)",
+      "Bash(npm test *)",
+      "Bash(pnpm test *)",
+      "Bash(/bin/sh *)",
+      "Bash(~/.local/node/bin/npx --prefix /Users/cosmos/Desktop/Cosmos/packages/shared jest clubs.queries --no-coverage)",
+      "Bash(npx jest *)",
+      "Bash(./node_modules/.bin/jest *)",
+      "Bash(env)",
+      "Bash(bash *)",
+      "Bash(yarn --version)",
+      "Bash(PATH=/Users/cosmos/.local/node/bin:__TRACKED_VAR__ npx jest clubs.queries --no-coverage)",
+      "Bash(PATH=/Users/cosmos/.local/node/bin:__TRACKED_VAR__ npx tsc --noEmit)",
+      "Bash(PATH=/Users/cosmos/.local/node/bin:__TRACKED_VAR__ npm test -- clubs.queries --no-coverage)",
+      "Bash(PATH=/Users/cosmos/.local/node/bin:__TRACKED_VAR__ npx jest --no-coverage)"
     ]
   }
 }
