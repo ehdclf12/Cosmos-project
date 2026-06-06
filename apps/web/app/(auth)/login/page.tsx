@@ -1,9 +1,28 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleLogin() {
+    setError('')
+    setLoading(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (error) {
+      setError(error.message)
+      return
+    }
+    router.push('/')
+  }
 
   return (
     <div className="w-full max-w-sm">
@@ -22,6 +41,8 @@ export default function LoginPage() {
             <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>이메일</label>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
               placeholder="email@example.com"
             />
@@ -30,18 +51,26 @@ export default function LoginPage() {
             <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>비밀번호</label>
             <input
               type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
               className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
               placeholder="••••••••"
             />
           </div>
         </div>
 
+        {error && (
+          <p className="mt-3 text-xs text-red-400">{error}</p>
+        )}
+
         <button
-          onClick={() => router.push('/')}
-          className="w-full mt-6 py-3 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90"
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full mt-6 py-3 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ backgroundColor: '#1C1C1C' }}
         >
-          로그인
+          {loading ? '로그인 중...' : '로그인'}
         </button>
 
         <div className="mt-6 flex items-center gap-3">
@@ -54,7 +83,6 @@ export default function LoginPage() {
           {['구글로 계속하기', '카카오로 계속하기', 'Apple로 계속하기'].map((label) => (
             <button
               key={label}
-              onClick={() => router.push('/')}
               className="w-full py-3 rounded-lg text-sm border border-gray-200 hover:bg-gray-50 transition-colors"
               style={{ color: '#1C1C1C' }}
             >
