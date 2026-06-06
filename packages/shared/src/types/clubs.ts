@@ -3,6 +3,12 @@ export type ClubMemberRole = 'leader' | 'admin' | 'member'
 export type ClubMemberStatus = 'active' | 'pending'
 export type MeetupAttendanceStatus = 'going' | 'maybe' | 'not_going'
 
+type ProfileSummary = {
+  username: string
+  display_name: string
+  avatar_url: string | null
+}
+
 export type Club = {
   id: string
   name: string
@@ -23,11 +29,7 @@ export type ClubMember = {
   role: ClubMemberRole
   status: ClubMemberStatus
   joined_at: string
-  profile?: {
-    username: string
-    display_name: string
-    avatar_url: string | null
-  }
+  profile?: ProfileSummary
 }
 
 export type ClubPost = {
@@ -38,16 +40,12 @@ export type ClubPost = {
   image_urls: string[] | null
   book_id: string | null
   created_at: string
-  author?: {
-    username: string
-    display_name: string
-    avatar_url: string | null
-  }
+  author?: ProfileSummary
   book?: {
     title: string
     author: string
     cover_url: string | null
-  } | null
+  }
 }
 
 export type ClubMeetup = {
