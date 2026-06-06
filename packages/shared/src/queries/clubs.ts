@@ -42,6 +42,7 @@ export async function fetchClub(
     from('club_members').select('*', { count: 'exact', head: true } as any).eq('club_id', clubId).eq('status', 'active'),
   ])
   if (clubRes.error) throw clubRes.error
+  if ((countRes as any).error) throw (countRes as any).error
   return {
     club: clubRes.data as Club,
     myMembership: (myMemberRes.data ?? null) as ClubMember | null,
