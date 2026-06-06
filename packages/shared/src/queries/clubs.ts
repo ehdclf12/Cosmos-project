@@ -71,6 +71,7 @@ export async function fetchClubPosts(
     .from('club_posts')
     .select('*, author:profiles(username, display_name, avatar_url), book:books(title, author, cover_url)')
     .eq('club_id', clubId)
+    .order('created_at', { ascending: false })
     .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1)
   if (error) throw error
   return data as ClubPost[]

@@ -5,7 +5,7 @@ const makeChain = (resolved: { data: unknown; error: unknown; count?: number }) 
   eq: jest.fn().mockReturnThis(),
   ilike: jest.fn().mockReturnThis(),
   overlaps: jest.fn().mockReturnThis(),
-  order: jest.fn().mockResolvedValue(resolved),
+  order: jest.fn().mockReturnThis(),
   range: jest.fn().mockResolvedValue(resolved),
   single: jest.fn().mockResolvedValue(resolved),
   maybeSingle: jest.fn().mockResolvedValue(resolved),
