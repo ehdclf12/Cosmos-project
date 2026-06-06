@@ -30,7 +30,7 @@ export default function RegisterPage() {
       setError(error.message)
       return
     }
-    router.push('/')
+    router.push('/clubs')
   }
 
   return (
