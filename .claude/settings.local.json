@@ -52,7 +52,9 @@
       "Bash(brew list *)",
       "Bash(vercel --version)",
       "Bash(pnpm --version)",
-      "Bash(gh --version)"
+      "Bash(gh --version)",
+      "Bash(npx --yes playwright --version)",
+      "Bash(python3 -c \"import playwright; print\\('ok'\\)\")"
     ]
   }
 }
