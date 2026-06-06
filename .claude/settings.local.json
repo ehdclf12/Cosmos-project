@@ -77,7 +77,9 @@
       "Bash(PATH=/Users/cosmos/.local/node/bin:__TRACKED_VAR__ npx jest --no-coverage)",
       "Bash(PATH=\"$HOME/.local/node/bin:$PATH\" gh pr *)",
       "Bash(security find-internet-password *)",
-      "Bash(PATH=\"$HOME/.local/bin:$PATH\" gh pr *)"
+      "Bash(PATH=\"$HOME/.local/bin:$PATH\" gh pr *)",
+      "Bash(PATH=/Users/cosmos/.local/bin:__TRACKED_VAR__ gh pr view 1 --json url,statusCheckRollup)",
+      "Bash(PATH=/Users/cosmos/.local/bin:__TRACKED_VAR__ gh pr view 1 --json comments --jq .comments[].body)"
     ]
   }
 }
