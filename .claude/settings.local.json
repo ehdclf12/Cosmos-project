@@ -80,7 +80,12 @@
       "Bash(PATH=\"$HOME/.local/bin:$PATH\" gh pr *)",
       "Bash(PATH=/Users/cosmos/.local/bin:__TRACKED_VAR__ gh pr view 1 --json url,statusCheckRollup)",
       "Bash(PATH=/Users/cosmos/.local/bin:__TRACKED_VAR__ gh pr view 1 --json comments --jq .comments[].body)",
-      "WebFetch(domain:magazine-b.com)"
+      "WebFetch(domain:magazine-b.com)",
+      "Bash(node ../../../node_modules/.bin/tsc --noEmit)",
+      "Bash(/Users/cosmos/Desktop/Cosmos/node_modules/.bin/tsc --noEmit)",
+      "Bash(grep -E \"\\\\.\\(config|json|ts\\)$\")",
+      "Bash(pnpm -r exec tsc --noEmit --project apps/web)",
+      "Bash(~/.local/bin/gh pr *)"
     ]
   }
 }
