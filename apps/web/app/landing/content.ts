@@ -60,7 +60,7 @@ export const landingContent: LandingContent = {
       { imageSrc: '/monet_04_artist_garden_giverny_hq.png', imageAlt: 'Monet — Artist Garden at Giverny', title: 'Reading together' },
       { imageSrc: '/monet_06_seine_at_vetheuil_hq.png', imageAlt: 'Monet — The Seine at Vétheuil', title: 'Slow books' },
       { imageSrc: '/monet_03_water_lily_pond_weeping_willow_hq.png', imageAlt: 'Monet — Water Lily Pond', title: 'Club picks' },
-      { imageSrc: '/monet_01_water_lilies_1906_ryerson_hq.png', imageAlt: 'Monet — Water Lilies', title: 'This month' },
+      { imageSrc: '/monet_02_impression_sunrise_hq.png', imageAlt: 'Monet — Impression, Sunrise', title: 'This month' },
     ],
   },
   section2: {
