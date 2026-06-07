@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const NAV = [
-  { href: '/', label: '홈', icon: '◎' },
+  { href: '/clubs', label: '홈', icon: '◎' },
   { href: '/books', label: '책장', icon: '☰' },
   { href: '/clubs', label: '클럽', icon: '◈' },
   { href: '/profile', label: '프로필', icon: '○' },
@@ -21,7 +21,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </div>
         <nav className="flex-1 space-y-1">
           {NAV.map(({ href, label, icon }) => {
-            const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
+            const active = pathname.startsWith(href)
             return (
               <Link
                 key={href}
