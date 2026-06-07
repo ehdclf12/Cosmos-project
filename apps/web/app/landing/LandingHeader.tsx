@@ -13,6 +13,7 @@ export default function LandingHeader({ onMenuClick }: Props) {
       {/* Left: hamburger + wordmark */}
       <div className="flex items-center gap-4">
         <button
+          type="button"
           onClick={onMenuClick}
           aria-label="Open menu"
           className="flex flex-col gap-1.5 p-1"
