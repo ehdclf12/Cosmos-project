@@ -1,4 +1,9 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Coming Soon — Cosmos',
+}
 
 export default function ComingSoonPage() {
   return (
@@ -6,12 +11,12 @@ export default function ComingSoonPage() {
       className="min-h-screen flex flex-col items-center justify-center"
       style={{ backgroundColor: '#F2F1EE' }}
     >
-      <p
-        className="text-xs tracking-widest uppercase mb-6"
+      <span
+        className="text-xs tracking-widest uppercase mb-6 block"
         style={{ color: '#A8A49C' }}
       >
         Cosmos
-      </p>
+      </span>
       <h1
         className="text-4xl font-light tracking-widest"
         style={{ color: '#1C1C1C' }}
