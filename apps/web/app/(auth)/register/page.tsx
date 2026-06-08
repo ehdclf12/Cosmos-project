@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 export default function RegisterPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
+  const [nickname, setNickname] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
@@ -14,24 +16,36 @@ export default function RegisterPage() {
 
   async function handleRegister() {
     setError('')
-    if (password !== confirm) {
-      setError('비밀번호가 일치하지 않습니다.')
-      return
-    }
-    if (password.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.')
-      return
-    }
+    if (!nickname.trim()) { setError('닉네임을 입력해주세요.'); return }
+    if (!phone.trim()) { setError('휴대폰 번호를 입력해주세요.'); return }
+    if (password !== confirm) { setError('비밀번호가 일치하지 않습니다.'); return }
+    if (password.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
+
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({ email, password })
-    setLoading(false)
-    if (error) {
-      setError(error.message)
-      return
+    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+    if (signUpError) { setError(signUpError.message); setLoading(false); return }
+
+    if (data.user) {
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: data.user.id,
+        nickname: nickname.trim(),
+        phone: phone.trim(),
+        username: nickname.trim(),
+        display_name: nickname.trim(),
+      })
+      if (profileError) {
+        setError(profileError.code === '23505' ? '이미 사용 중인 닉네임입니다.' : profileError.message)
+        setLoading(false)
+        return
+      }
     }
+
+    setLoading(false)
     router.push('/')
   }
+
+  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
 
   return (
     <div className="w-full max-w-sm">
@@ -44,47 +58,31 @@ export default function RegisterPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>이메일</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
-              placeholder="email@example.com"
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="email@example.com" />
+          </div>
+          <div>
+            <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>닉네임</label>
+            <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} className={inputClass} placeholder="사용할 닉네임" />
+          </div>
+          <div>
+            <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>휴대폰 번호</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} placeholder="010-0000-0000" />
           </div>
           <div>
             <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>비밀번호 (6자 이상)</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
-              placeholder="••••••••"
-            />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" />
           </div>
           <div>
             <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>비밀번호 확인</label>
-            <input
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
-              className="w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
-              placeholder="••••••••"
-            />
+            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleRegister()} className={inputClass} placeholder="••••••••" />
           </div>
         </div>
 
-        {error && (
-          <p className="mt-3 text-xs text-red-400">{error}</p>
-        )}
+        {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
 
-        <button
-          onClick={handleRegister}
-          disabled={loading}
+        <button onClick={handleRegister} disabled={loading}
           className="w-full mt-6 py-3 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ backgroundColor: '#1C1C1C' }}
-        >
+          style={{ backgroundColor: '#1C1C1C' }}>
           {loading ? '가입 중...' : '가입하기'}
         </button>
       </div>
