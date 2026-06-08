@@ -20,7 +20,11 @@ export default async function MyBooksPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  const userBooks = rows ?? []
+  type BookEntry = { status: string; book: { id: string; title: string; author: string; cover_url: string | null } | null }
+  const userBooks: BookEntry[] = (rows ?? []).map((r) => ({
+    status: r.status,
+    book: Array.isArray(r.book) ? (r.book[0] ?? null) : (r.book as any),
+  }))
 
   return (
     <div>

@@ -14,7 +14,10 @@ export default async function MyClubsPage() {
     .eq('status', 'active')
     .order('joined_at', { ascending: false })
 
-  const clubs = (memberships ?? []).map((m) => m.club).filter(Boolean)
+  type ClubData = { id: string; name: string; description: string | null; tags: string[]; access_type: string }
+  const clubs: ClubData[] = (memberships ?? [])
+    .map((m) => Array.isArray(m.club) ? (m.club[0] ?? null) : (m.club as any))
+    .filter(Boolean)
 
   return (
     <div>

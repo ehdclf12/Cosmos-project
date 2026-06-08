@@ -13,7 +13,9 @@ export default async function WishlistPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  const goods = (rows ?? []).map((r) => r.goods).filter(Boolean)
+  const goods = (rows ?? [])
+    .map((r) => Array.isArray(r.goods) ? (r.goods[0] ?? null) : (r.goods as any))
+    .filter(Boolean)
 
   return (
     <div>
