@@ -4,7 +4,7 @@ const NAV_ITEMS = [
   { label: 'New', href: '/coming-soon' },
   { label: 'Magazine', href: '/coming-soon' },
   { label: 'Books', href: '/coming-soon' },
-  { label: 'Goods & Tickets', href: '/coming-soon' },
+  { label: 'Goods & Tickets', href: '/goods' },
   { label: 'Newsletter', href: '/coming-soon' },
   { label: 'Index', href: '/coming-soon' },
   { label: 'Club', href: '/clubs' },
