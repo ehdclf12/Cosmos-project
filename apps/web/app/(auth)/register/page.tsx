@@ -34,7 +34,7 @@ export default function RegisterPage() {
     router.push('/')
   }
 
-  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
+  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 outline-none focus:border-gray-400 transition-colors"
 
   return (
     <div className="w-full max-w-sm">
