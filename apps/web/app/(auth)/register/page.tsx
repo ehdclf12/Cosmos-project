@@ -23,23 +23,12 @@ export default function RegisterPage() {
 
     setLoading(true)
     const supabase = createClient()
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { nickname: nickname.trim(), phone: phone.trim() } },
+    })
     if (signUpError) { setError(signUpError.message); setLoading(false); return }
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        nickname: nickname.trim(),
-        phone: phone.trim(),
-        username: nickname.trim(),
-        display_name: nickname.trim(),
-      })
-      if (profileError) {
-        setError(profileError.code === '23505' ? '이미 사용 중인 닉네임입니다.' : profileError.message)
-        setLoading(false)
-        return
-      }
-    }
 
     setLoading(false)
     router.push('/')
