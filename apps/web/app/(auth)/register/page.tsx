@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function RegisterPage() {
@@ -13,6 +13,13 @@ export default function RegisterPage() {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    if (!done) return
+    const t = setTimeout(() => router.push('/login'), 2500)
+    return () => clearTimeout(t)
+  }, [done, router])
 
   async function handleRegister() {
     setError('')
@@ -31,10 +38,30 @@ export default function RegisterPage() {
     if (signUpError) { setError(signUpError.message); setLoading(false); return }
 
     setLoading(false)
-    router.push('/')
+    setDone(true)
   }
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-900 outline-none focus:border-gray-400 transition-colors"
+
+  if (done) {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <h1 className="text-3xl font-light tracking-widest mb-10" style={{ color: '#1C1C1C' }}>COSMOS</h1>
+        <div className="bg-white rounded-2xl p-10 shadow-sm">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ backgroundColor: '#F2F1EE' }}>
+            <svg className="w-7 h-7" fill="none" stroke="#1C1C1C" strokeWidth={1.8} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p className="text-base font-light mb-2" style={{ color: '#1C1C1C' }}>회원가입이 완료되었습니다!</p>
+          <p className="text-sm" style={{ color: '#A8A49C' }}>잠시 후 로그인 페이지로 이동합니다.</p>
+          <Link href="/login" className="block mt-6 text-xs underline" style={{ color: '#6B6862' }}>
+            바로 로그인하기
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full max-w-sm">

@@ -13,24 +13,21 @@ export default function LandingClient() {
   useEffect(() => {
     const supabase = createClient()
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    async function resolveNickname(session: { user: { id: string; user_metadata?: Record<string, string> } } | null) {
       if (!session?.user) { setNickname(null); return }
+      const metaNickname: string | null = session.user.user_metadata?.nickname ?? null
       const { data } = await supabase
         .from('profiles')
         .select('nickname')
         .eq('id', session.user.id)
         .single()
-      setNickname(data?.nickname ?? null)
-    })
+      setNickname(data?.nickname || metaNickname || null)
+    }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!session?.user) { setNickname(null); return }
-      const { data } = await supabase
-        .from('profiles')
-        .select('nickname')
-        .eq('id', session.user.id)
-        .single()
-      setNickname(data?.nickname ?? null)
+    supabase.auth.getSession().then(({ data: { session } }) => resolveNickname(session))
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      resolveNickname(session)
     })
 
     return () => subscription.unsubscribe()
