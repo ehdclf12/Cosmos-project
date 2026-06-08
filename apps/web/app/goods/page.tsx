@@ -14,10 +14,11 @@ export default async function GoodsPage({ searchParams }: Props) {
   const { category } = await searchParams
   const supabase = await createClient()
 
-  const { data: categories = [] } = await supabase
+  const { data: categoriesData } = await supabase
     .from('categories')
     .select('id, name, slug')
     .order('name')
+  const categories = categoriesData ?? []
 
   let query = supabase
     .from('goods')
@@ -29,7 +30,8 @@ export default async function GoodsPage({ searchParams }: Props) {
     if (cat) query = query.eq('category_id', cat.id)
   }
 
-  const { data: goods = [] } = await query
+  const { data: goodsData } = await query
+  const goods = goodsData ?? []
 
   return (
     <div style={{ backgroundColor: '#F2F1EE', minHeight: '100vh' }}>

@@ -42,12 +42,13 @@ export default async function GoodsDetailPage({ params }: Props) {
     isWished = !!wl
   }
 
-  const { data: related = [] } = await supabase
+  const { data: relatedData } = await supabase
     .from('goods')
     .select('id, title, description, price, original_price, images, status, categories(name, slug)')
     .eq('category_id', item.category_id)
     .neq('id', id)
     .limit(4)
+  const related = relatedData ?? []
 
   const discount = item.original_price
     ? Math.round((1 - item.price / item.original_price) * 100)
