@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import LandingClient from '@/app/landing/LandingClient'
 import { createClient } from '@/lib/supabase/server'
+import AddToCartButton from '../_components/AddToCartButton'
 import WishlistButton from '../_components/WishlistButton'
 import GoodsCard from '../_components/GoodsCard'
 
@@ -128,7 +129,15 @@ export default async function GoodsDetailPage({ params }: Props) {
             )}
 
             {item.status === 'available' ? (
-              <WishlistButton goodsId={item.id} initialWished={isWished} />
+              <div className="flex flex-col gap-3">
+                <AddToCartButton
+                  goodsId={item.id}
+                  title={item.title}
+                  price={item.price}
+                  imageUrl={item.images[0] ?? null}
+                />
+                <WishlistButton goodsId={item.id} initialWished={isWished} />
+              </div>
             ) : (
               <span className="text-sm tracking-widest uppercase" style={{ color: '#A8A49C' }}>
                 Sold Out
