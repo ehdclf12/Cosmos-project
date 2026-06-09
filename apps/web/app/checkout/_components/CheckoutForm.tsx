@@ -25,8 +25,8 @@ export default function CheckoutForm({ userId }: Props) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (items.length === 0) router.replace('/goods')
-  }, [items.length, router])
+    if (!loading && items.length === 0) router.replace('/goods')
+  }, [items.length, loading, router])
 
   const inputClass =
     'w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-black outline-none focus:border-gray-400 transition-colors'
@@ -73,6 +73,7 @@ export default function CheckoutForm({ userId }: Props) {
     )
 
     if (itemsError) {
+      await supabase.from('orders').delete().eq('id', order.id)
       setError('주문 항목 저장 중 오류가 발생했습니다.')
       setLoading(false)
       return
