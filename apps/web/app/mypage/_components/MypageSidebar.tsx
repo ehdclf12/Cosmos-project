@@ -5,8 +5,9 @@ import { createClient } from '@/lib/supabase/client'
 
 const NAV = [
   { href: '/mypage', label: '프로필 수정', group: '내 정보' },
-  { href: '/mypage/wishlist', label: '찜한 상품', group: '찜한 목록' },
-  { href: '/mypage/clubs', label: '가입한 클럽', group: null },
+  { href: '/mypage/orders', label: '주문 내역', group: '쇼핑' },
+  { href: '/mypage/wishlist', label: '찜한 상품', group: null },
+  { href: '/mypage/clubs', label: '가입한 클럽', group: '활동' },
   { href: '/mypage/books', label: '읽은 책', group: null },
 ]
 
