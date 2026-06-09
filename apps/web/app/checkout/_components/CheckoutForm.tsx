@@ -73,6 +73,7 @@ export default function CheckoutForm({ userId }: Props) {
     )
 
     if (itemsError) {
+      // MVP: compensating delete — production should use a DB transaction (RPC)
       await supabase.from('orders').delete().eq('id', order.id)
       setError('주문 항목 저장 중 오류가 발생했습니다.')
       setLoading(false)

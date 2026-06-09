@@ -42,7 +42,7 @@ export default function LandingHeader({ onMenuClick, nickname, onLogout }: Props
       <div className="flex items-center gap-3">
         {/* 장바구니 아이콘 */}
         <Link
-          href="/checkout"
+          href={cartCount > 0 ? '/checkout' : '/goods'}
           className="relative flex items-center justify-center w-8 h-8 transition-opacity hover:opacity-60"
           aria-label="장바구니"
           style={{ color: '#1C1C1C' }}
