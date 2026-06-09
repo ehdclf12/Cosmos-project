@@ -89,7 +89,15 @@
       "Bash(~/.local/bin/gh api *)",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(x.get\\('ref',''\\),x.get\\('environment',''\\),x.get\\('id',''\\)\\) for x in d[:3]]\")",
       "Bash(npm i *)",
-      "Bash(pnpm --filter web build)"
+      "Bash(pnpm --filter web build)",
+      "Bash(pnpm add *)",
+      "Bash(brew *)",
+      "Bash(/Users/cosmos/bin/node *)",
+      "Bash(/Users/cosmos/.local/node/lib/node_modules/corepack/shims/pnpm *)",
+      "Bash(/Users/cosmos/.local/node/bin/pnpm add *)",
+      "Bash(pnpm tsc *)",
+      "Bash(xargs cat -n)",
+      "Bash(grep *)"
     ]
   }
 }
