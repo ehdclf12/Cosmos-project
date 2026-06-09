@@ -97,7 +97,8 @@
       "Bash(/Users/cosmos/.local/node/bin/pnpm add *)",
       "Bash(pnpm tsc *)",
       "Bash(xargs cat -n)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(npx playwright *)"
     ]
   }
 }
