@@ -17,7 +17,7 @@ export default function ProfileForm({ userId, initialNickname, initialPhone }: P
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm outline-none focus:border-gray-400 transition-colors"
+  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-black outline-none focus:border-gray-400 transition-colors"
 
   async function handleSave() {
     setError('')
