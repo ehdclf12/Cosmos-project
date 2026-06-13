@@ -37,7 +37,7 @@ export default async function AdminOrdersPage() {
                   {(order.profiles as any)?.display_name ?? '-'}
                 </td>
                 <td className="py-3 max-w-xs truncate" style={{ color: '#6B6862' }}>{itemLabel || '-'}</td>
-                <td className="py-3" style={{ color: '#1C1C1C' }}>{order.total_amount.toLocaleString()}원</td>
+                <td className="py-3" style={{ color: '#1C1C1C' }}>{(order.total_amount ?? 0).toLocaleString()}원</td>
                 <td className="py-3">
                   <OrderStatusSelect id={order.id} status={order.status} />
                 </td>

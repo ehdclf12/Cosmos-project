@@ -7,9 +7,11 @@ export default function OrderStatusSelect({ id, status }: { id: string; status: 
 
   async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value
+    const prev = value
     setValue(next)
     const supabase = createClient()
-    await supabase.from('orders').update({ status: next }).eq('id', id)
+    const { error } = await supabase.from('orders').update({ status: next }).eq('id', id)
+    if (error) setValue(prev)
   }
 
   return (

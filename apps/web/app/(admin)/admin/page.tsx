@@ -62,9 +62,9 @@ export default async function AdminDashboard() {
               <td className="py-2" style={{ color: '#1C1C1C' }}>
                 {(order.profiles as any)?.display_name ?? '-'}
               </td>
-              <td className="py-2" style={{ color: '#1C1C1C' }}>{order.total_amount.toLocaleString()}원</td>
+              <td className="py-2" style={{ color: '#1C1C1C' }}>{(order.total_amount ?? 0).toLocaleString()}원</td>
               <td className="py-2" style={{ color: order.status === 'paid' ? '#1C1C1C' : '#A8A49C' }}>
-                {order.status === 'paid' ? '결제 완료' : '취소됨'}
+                {{ paid: '결제 완료', cancelled: '취소됨' }[order.status] ?? order.status}
               </td>
               <td className="py-2" style={{ color: '#6B6862' }}>
                 {new Date(order.created_at).toLocaleDateString('ko-KR')}

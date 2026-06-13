@@ -57,7 +57,7 @@ export default async function AdminGoodsPage() {
                 )}
               </td>
               <td className="py-3" style={{ color: '#1C1C1C' }}>{item.title}</td>
-              <td className="py-3" style={{ color: '#6B6862' }}>{item.price.toLocaleString()}원</td>
+              <td className="py-3" style={{ color: '#6B6862' }}>{(item.price ?? 0).toLocaleString()}원</td>
               <td className="py-3" style={{ color: '#6B6862' }}>
                 {(item.categories as any)?.name ?? '-'}
               </td>
