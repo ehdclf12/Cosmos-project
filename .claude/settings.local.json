@@ -98,7 +98,9 @@
       "Bash(pnpm tsc *)",
       "Bash(xargs cat -n)",
       "Bash(grep *)",
-      "Bash(npx playwright *)"
+      "Bash(npx playwright *)",
+      "Skill(run)",
+      "Bash(pnpm dev *)"
     ]
   }
 }
