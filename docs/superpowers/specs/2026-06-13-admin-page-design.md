@@ -95,8 +95,8 @@ create policy "orders_admin_update" on public.orders
 create policy "profiles_admin_select" on public.profiles
   for select using (public.is_admin());
 
--- wishlist: 관리자 조회
-create policy "wishlist_admin_select" on public.wishlist
+-- goods_wishlist: 관리자 조회
+create policy "goods_wishlist_admin_select" on public.goods_wishlist
   for select using (public.is_admin());
 ```
 
