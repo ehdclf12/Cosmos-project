@@ -15,13 +15,14 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
     if (error) {
       setError(error.message)
       return
     }
-    router.push('/')
+    const isAdmin = data.user?.app_metadata?.role === 'admin'
+    router.push(isAdmin ? '/admin' : '/')
     router.refresh()
   }
 
