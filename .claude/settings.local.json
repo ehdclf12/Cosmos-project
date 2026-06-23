@@ -100,7 +100,9 @@
       "Bash(grep *)",
       "Bash(npx playwright *)",
       "Skill(run)",
-      "Bash(pnpm dev *)"
+      "Bash(pnpm dev *)",
+      "Bash(vercel ls *)",
+      "Bash(npx vercel *)"
     ]
   }
 }
