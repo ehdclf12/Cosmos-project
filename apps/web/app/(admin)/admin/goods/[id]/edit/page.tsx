@@ -7,14 +7,14 @@ export const metadata: Metadata = { title: '상품 수정 — Cosmos Admin' }
 
 interface Props { params: Promise<{ id: string }> }
 
-export default async function AdminGoodsEditPage({ params }: Props) {
+export default async function EditGoodsPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
 
   const [{ data: item }, { data: categories }] = await Promise.all([
     supabase
       .from('goods')
-      .select('id, title, description, price, original_price, images, status, category_id')
+      .select('id, title, description, price, discount_rate, images, status, category_id, published_at')
       .eq('id', id)
       .single(),
     supabase.from('categories').select('id, name').order('name'),
@@ -32,10 +32,11 @@ export default async function AdminGoodsEditPage({ params }: Props) {
           title: item.title,
           description: item.description,
           price: item.price,
-          original_price: item.original_price,
-          images: (item.images as string[]) ?? [],
-          status: item.status as 'active' | 'sold_out' | 'draft',
+          discount_rate: item.discount_rate ?? 0,
+          images: item.images ?? [],
+          status: item.status,
           category_id: item.category_id,
+          published_at: item.published_at ?? null,
         }}
       />
     </div>
