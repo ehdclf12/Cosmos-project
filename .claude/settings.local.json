@@ -103,7 +103,19 @@
       "Bash(pnpm dev *)",
       "Bash(vercel ls *)",
       "Bash(npx vercel *)",
-      "Bash(xargs ls -la)"
+      "Bash(xargs ls -la)",
+      "Bash(cat \"$\\(git -C /Users/cosmos/Desktop/Cosmos rev-parse --show-toplevel\\)/.superpowers/sdd/progress.md\")",
+      "Bash($SCRIPTS/task-brief $PLAN *)",
+      "Bash($SCRIPTS/review-package 1811d393583cf9eae4031005e0daed0008c7722c *)",
+      "Bash($SCRIPTS/review-package 6b5a757d5a34611dc8314ba2d8f5563401bee1fd *)",
+      "Bash($SCRIPTS/review-package 858609cb122ed71397d748d85d4eb160bc9bc7e9 *)",
+      "Bash($SCRIPTS/review-package 5e2fc74c963595cdb4005a3d90069b01938909c8 *)",
+      "Bash(xargs cat)",
+      "Bash($SCRIPTS/review-package 838ebbf6e03e1bbf9aee52fa80995c21e29a718c *)",
+      "Bash($SCRIPTS/review-package ca1afb791db1a080614f36504e945da8e127ad4c *)",
+      "Bash($SCRIPTS/review-package c13f2fc2bda9a2f62423a81f74cbb5d106aa96b2 *)",
+      "Bash($SCRIPTS/review-package 80cfc355fdee342577dff4a74cc1fe7c921ff779 *)",
+      "Bash($SCRIPTS/review-package 213768913f67beafbeb7c3d14bd2d5c5f51581e5 *)"
     ]
   }
 }
