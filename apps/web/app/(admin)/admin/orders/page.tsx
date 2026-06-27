@@ -17,7 +17,7 @@ export default async function AdminOrdersPage() {
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left" style={{ color: '#A8A49C' }}>
+          <tr className="text-left" style={{ color: '#1C1C1C' }}>
             <th className="pb-2 font-normal">주문번호</th>
             <th className="pb-2 font-normal">회원</th>
             <th className="pb-2 font-normal">상품</th>
@@ -32,16 +32,16 @@ export default async function AdminOrdersPage() {
             const itemLabel = items.map((i) => `${i.title} x${i.quantity}`).join(', ')
             return (
               <tr key={order.id} style={{ borderTop: '1px solid #E8E5E0' }}>
-                <td className="py-3" style={{ color: '#6B6862' }}>{order.id.slice(0, 8).toUpperCase()}</td>
+                <td className="py-3" style={{ color: '#1C1C1C' }}>{order.id.slice(0, 8).toUpperCase()}</td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
                   {(order.profiles as any)?.display_name ?? '-'}
                 </td>
-                <td className="py-3 max-w-xs truncate" style={{ color: '#6B6862' }}>{itemLabel || '-'}</td>
+                <td className="py-3 max-w-xs truncate" style={{ color: '#1C1C1C' }}>{itemLabel || '-'}</td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>{(order.total_amount ?? 0).toLocaleString()}원</td>
                 <td className="py-3">
                   <OrderStatusSelect id={order.id} status={order.status} />
                 </td>
-                <td className="py-3" style={{ color: '#6B6862' }}>
+                <td className="py-3" style={{ color: '#1C1C1C' }}>
                   {new Date(order.created_at).toLocaleDateString('ko-KR')}
                 </td>
               </tr>
@@ -49,7 +49,7 @@ export default async function AdminOrdersPage() {
           })}
           {(orders ?? []).length === 0 && (
             <tr>
-              <td colSpan={6} className="py-12 text-center text-sm" style={{ color: '#A8A49C' }}>주문이 없습니다.</td>
+              <td colSpan={6} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>주문이 없습니다.</td>
             </tr>
           )}
         </tbody>

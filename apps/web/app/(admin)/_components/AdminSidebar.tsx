@@ -7,6 +7,7 @@ const NAV = [
   { href: '/admin/goods', label: '상품 관리' },
   { href: '/admin/orders', label: '주문 관리' },
   { href: '/admin/customers', label: '고객 관리' },
+  { href: '/admin/clubs', label: '독서클럽' },
 ]
 
 export default function AdminSidebar() {
@@ -18,7 +19,7 @@ export default function AdminSidebar() {
     >
       <span
         className="text-xs tracking-widest uppercase mb-8 block"
-        style={{ color: '#A8A49C' }}
+        style={{ color: '#1C1C1C' }}
       >
         Cosmos Admin
       </span>
@@ -32,7 +33,7 @@ export default function AdminSidebar() {
               className="block px-3 py-2 rounded-lg text-sm transition-colors"
               style={{
                 backgroundColor: active ? '#1C1C1C' : 'transparent',
-                color: active ? 'white' : '#6B6862',
+                color: active ? 'white' : '#1C1C1C',
               }}
             >
               {label}

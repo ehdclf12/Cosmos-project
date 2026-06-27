@@ -41,7 +41,7 @@ export default async function AdminCustomersPage() {
 
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left" style={{ color: '#A8A49C' }}>
+          <tr className="text-left" style={{ color: '#1C1C1C' }}>
             <th className="pb-2 font-normal">이름</th>
             <th className="pb-2 font-normal">이메일</th>
             <th className="pb-2 font-normal">가입일</th>
@@ -56,16 +56,16 @@ export default async function AdminCustomersPage() {
                   {c.display_name}
                 </Link>
               </td>
-              <td className="py-3" style={{ color: '#6B6862' }}>{c.email}</td>
-              <td className="py-3" style={{ color: '#6B6862' }}>
+              <td className="py-3" style={{ color: '#1C1C1C' }}>{c.email}</td>
+              <td className="py-3" style={{ color: '#1C1C1C' }}>
                 {new Date(c.created_at).toLocaleDateString('ko-KR')}
               </td>
-              <td className="py-3" style={{ color: '#6B6862' }}>{c.orderCount}건</td>
+              <td className="py-3" style={{ color: '#1C1C1C' }}>{c.orderCount}건</td>
             </tr>
           ))}
           {customers.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-12 text-center text-sm" style={{ color: '#A8A49C' }}>회원이 없습니다.</td>
+              <td colSpan={4} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>회원이 없습니다.</td>
             </tr>
           )}
         </tbody>
