@@ -6,9 +6,9 @@ export interface GoodsItem {
   title: string
   description: string | null
   price: number
-  original_price: number | null
+  discount_rate: number
   images: string[]
-  status: 'available' | 'sold_out'
+  status: 'active' | 'sold_out' | 'draft'
   categories: { name: string; slug: string } | null
 }
 
@@ -17,13 +17,10 @@ interface Props {
 }
 
 export default function GoodsCard({ item }: Props) {
-  const discount = item.original_price
-    ? Math.round((1 - item.price / item.original_price) * 100)
-    : null
+  const finalPrice = Math.round(item.price * (1 - item.discount_rate / 100))
 
   return (
     <Link href={`/goods/${item.id}`} className="group block">
-      {/* 이미지 */}
       <div className="relative w-full aspect-[3/4] overflow-hidden mb-3" style={{ backgroundColor: '#E8E5E0' }}>
         {item.images[0] ? (
           <Image
@@ -33,7 +30,7 @@ export default function GoodsCard({ item }: Props) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: '#A8A49C' }}>
+          <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: '#1C1C1C' }}>
             No Image
           </div>
         )}
@@ -46,10 +43,9 @@ export default function GoodsCard({ item }: Props) {
         )}
       </div>
 
-      {/* 정보 */}
       <div>
         {item.categories && (
-          <p className="text-xs tracking-widest uppercase mb-1" style={{ color: '#A8A49C' }}>
+          <p className="text-xs tracking-widest uppercase mb-1" style={{ color: '#1C1C1C' }}>
             {item.categories.name}
           </p>
         )}
@@ -58,15 +54,15 @@ export default function GoodsCard({ item }: Props) {
         </p>
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-medium" style={{ color: '#1C1C1C' }}>
-            ₩{item.price.toLocaleString()}
+            ₩{finalPrice.toLocaleString()}
           </span>
-          {item.original_price && (
+          {item.discount_rate > 0 && (
             <>
-              <span className="text-xs line-through" style={{ color: '#A8A49C' }}>
-                ₩{item.original_price.toLocaleString()}
+              <span className="text-xs line-through" style={{ color: '#1C1C1C', opacity: 0.4 }}>
+                ₩{item.price.toLocaleString()}
               </span>
-              <span className="text-xs" style={{ color: '#6B6862' }}>
-                {discount}% OFF
+              <span className="text-xs" style={{ color: '#1C1C1C' }}>
+                {item.discount_rate}% OFF
               </span>
             </>
           )}
