@@ -24,7 +24,7 @@ export default function CategoryFilter({ categories, activeSlug }: Props) {
             href={cat.slug ? `/goods?category=${cat.slug}` : '/goods'}
             className="text-xs tracking-widest uppercase pb-0.5 transition-colors"
             style={{
-              color: isActive ? '#1C1C1C' : '#A8A49C',
+              color: isActive ? '#1C1C1C' : '#1C1C1C',
               borderBottom: isActive ? '1px solid #1C1C1C' : '1px solid transparent',
             }}
           >

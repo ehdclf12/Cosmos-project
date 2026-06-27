@@ -1,7 +1,6 @@
 'use client'
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 interface Category { id: string; name: string }
@@ -38,6 +37,7 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
       : '',
   })
   const [images, setImages] = useState<string[]>(initial?.images ?? [])
+  const [pendingDeletes, setPendingDeletes] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -74,10 +74,10 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  async function removeImage(url: string) {
-    const supabase = createClient()
+  function removeImage(url: string) {
+    // Only remove from local preview; delete from Storage only on save
     const path = url.split('/goods-images/')[1]
-    if (path) await supabase.storage.from('goods-images').remove([path])
+    if (path) setPendingDeletes((prev) => [...prev, path])
     setImages((prev) => prev.filter((u) => u !== url))
   }
 
@@ -103,6 +103,10 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
 
     setLoading(false)
     if (err) { setError(err.message); return }
+    if (pendingDeletes.length > 0) {
+      const supabaseClient = createClient()
+      await supabaseClient.storage.from('goods-images').remove(pendingDeletes)
+    }
     router.push('/admin/goods')
     router.refresh()
   }
@@ -190,7 +194,7 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
           <div className="flex flex-wrap gap-2 mb-3">
             {images.map((url, i) => (
               <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden" style={{ backgroundColor: '#E8E5E0' }}>
-                <Image src={url} alt={`이미지 ${i + 1}`} fill className="object-cover" />
+                <img src={url} alt={`이미지 ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removeImage(url)}

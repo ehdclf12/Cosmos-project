@@ -17,7 +17,7 @@ interface Props {
 }
 
 export default function GoodsCard({ item }: Props) {
-  const finalPrice = Math.round(item.price * (1 - item.discount_rate / 100))
+  const finalPrice = Math.round(item.price * (1 - (item.discount_rate ?? 0) / 100))
 
   return (
     <Link href={`/goods/${item.id}`} className="group block">
@@ -56,7 +56,7 @@ export default function GoodsCard({ item }: Props) {
           <span className="text-sm font-medium" style={{ color: '#1C1C1C' }}>
             ₩{finalPrice.toLocaleString()}
           </span>
-          {item.discount_rate > 0 && (
+          {(item.discount_rate ?? 0) > 0 && (
             <>
               <span className="text-xs line-through" style={{ color: '#1C1C1C', opacity: 0.4 }}>
                 ₩{item.price.toLocaleString()}

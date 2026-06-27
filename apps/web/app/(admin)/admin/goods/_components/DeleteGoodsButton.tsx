@@ -13,7 +13,7 @@ export default function DeleteGoodsButton({ id }: { id: string }) {
   }
 
   return (
-    <button onClick={handleDelete} className="text-xs hover:opacity-70" style={{ color: '#A8A49C' }}>
+    <button onClick={handleDelete} className="text-xs hover:opacity-70" style={{ color: '#1C1C1C' }}>
       삭제
     </button>
   )

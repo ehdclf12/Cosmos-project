@@ -27,14 +27,15 @@ export default async function AdminGoodsDetailPage({ params }: Props) {
       .eq('goods_id', id),
     supabase
       .from('order_items')
-      .select('quantity, unit_price, orders(id, status, created_at, profiles(display_name))')
+      .select('id, quantity, unit_price, orders(id, status, created_at, profiles(display_name))')
       .eq('goods_id', id),
   ])
 
   if (!item) notFound()
 
-  const totalQty = (orderItems ?? []).reduce((s, i) => s + (i.quantity ?? 0), 0)
-  const totalRevenue = (orderItems ?? []).reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0)
+  const paidItems = (orderItems ?? []).filter((oi) => (oi.orders as any)?.status === 'paid')
+  const totalQty = paidItems.reduce((s, i) => s + (i.quantity ?? 0), 0)
+  const totalRevenue = paidItems.reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0)
   const finalPrice = Math.round(item.price * (1 - (item.discount_rate ?? 0) / 100))
 
   const STATUS_LABEL: Record<string, string> = {
@@ -120,7 +121,7 @@ export default async function AdminGoodsDetailPage({ params }: Props) {
           {(orderItems ?? []).map((oi) => {
             const order = oi.orders as any
             return (
-              <tr key={order?.id} style={{ borderTop: '1px solid #E8E5E0' }}>
+              <tr key={oi.id ?? order?.id} style={{ borderTop: '1px solid #E8E5E0' }}>
                 <td className="py-2" style={{ color: '#1C1C1C' }}>{order?.id?.slice(0, 8).toUpperCase() ?? '-'}</td>
                 <td className="py-2" style={{ color: '#1C1C1C' }}>{order?.profiles?.display_name ?? '-'}</td>
                 <td className="py-2" style={{ color: '#1C1C1C' }}>{oi.quantity}</td>
