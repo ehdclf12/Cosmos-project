@@ -92,7 +92,7 @@ export default async function OrderDetailPage({ params }: Props) {
       </section>
 
       {/* 주문자 정보 */}
-      <section>
+      <section className="mb-8">
         <h2 className="text-sm font-medium mb-3" style={{ color: '#1C1C1C' }}>주문자 정보</h2>
         <div className="rounded-2xl p-5 space-y-2" style={{ backgroundColor: '#E8E5E0' }}>
           <div className="flex items-center justify-between">
@@ -102,12 +102,23 @@ export default async function OrderDetailPage({ params }: Props) {
               className="text-sm hover:underline"
               style={{ color: '#1C1C1C' }}
             >
-              {(order as any).recipient_name ?? '-'}
+              {profile?.display_name ?? '-'}
             </Link>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>이메일</span>
             <span className="text-sm" style={{ color: '#1C1C1C' }}>{authUser?.email ?? '-'}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 배송 정보 */}
+      <section>
+        <h2 className="text-sm font-medium mb-3" style={{ color: '#1C1C1C' }}>배송 정보</h2>
+        <div className="rounded-2xl p-5 space-y-2" style={{ backgroundColor: '#E8E5E0' }}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>수령인명</span>
+            <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).recipient_name ?? '-'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>연락처</span>

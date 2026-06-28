@@ -121,7 +121,8 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
         <thead>
           <tr className="text-left" style={{ color: '#1C1C1C' }}>
             <th className="pb-2 font-normal">주문번호</th>
-            <th className="pb-2 font-normal">회원</th>
+            <th className="pb-2 font-normal">주문자명</th>
+            <th className="pb-2 font-normal">수령인명</th>
             <th className="pb-2 font-normal">상품</th>
             <th className="pb-2 font-normal">금액</th>
             <th className="pb-2 font-normal">상태</th>
@@ -144,7 +145,10 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                   </Link>
                 </td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
-                  {(order as any).recipient_name ?? profileMap[order.user_id] ?? '-'}
+                  {profileMap[order.user_id] ?? '-'}
+                </td>
+                <td className="py-3" style={{ color: '#1C1C1C' }}>
+                  {(order as any).recipient_name ?? '-'}
                 </td>
                 <td className="py-3 max-w-xs truncate" style={{ color: '#1C1C1C' }}>{itemLabel || '-'}</td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>{(order.total_amount ?? 0).toLocaleString()}원</td>
@@ -159,7 +163,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
           })}
           {(orders ?? []).length === 0 && (
             <tr>
-              <td colSpan={6} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>
+              <td colSpan={7} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>
                 {q || statusFilter || dateFrom || dateTo ? '검색 결과가 없습니다.' : '주문이 없습니다.'}
               </td>
             </tr>
