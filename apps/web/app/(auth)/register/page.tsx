@@ -15,18 +15,15 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
-  useEffect(() => {
-    if (!done) return
-    const t = setTimeout(() => router.push('/login'), 2500)
-    return () => clearTimeout(t)
-  }, [done, router])
+  const SPECIAL_CHAR = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/
 
   async function handleRegister() {
     setError('')
     if (!nickname.trim()) { setError('닉네임을 입력해주세요.'); return }
     if (!phone.trim()) { setError('휴대폰 번호를 입력해주세요.'); return }
+    if (password.length < 10) { setError('비밀번호는 10자 이상이어야 합니다.'); return }
+    if (!SPECIAL_CHAR.test(password)) { setError('비밀번호에 특수문자(!@#$ 등)를 포함해주세요.'); return }
     if (password !== confirm) { setError('비밀번호가 일치하지 않습니다.'); return }
-    if (password.length < 6) { setError('비밀번호는 6자 이상이어야 합니다.'); return }
 
     setLoading(true)
     const supabase = createClient()
@@ -50,14 +47,29 @@ export default function RegisterPage() {
         <div className="bg-white rounded-2xl p-10 shadow-sm">
           <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-5" style={{ backgroundColor: '#F2F1EE' }}>
             <svg className="w-7 h-7" fill="none" stroke="#1C1C1C" strokeWidth={1.8} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <p className="text-base font-light mb-2" style={{ color: '#1C1C1C' }}>회원가입이 완료되었습니다!</p>
-          <p className="text-sm" style={{ color: '#A8A49C' }}>잠시 후 로그인 페이지로 이동합니다.</p>
-          <Link href="/login" className="block mt-6 text-xs underline" style={{ color: '#6B6862' }}>
-            바로 로그인하기
-          </Link>
+          <p className="text-base font-light mb-3" style={{ color: '#1C1C1C' }}>인증 메일을 발송했습니다</p>
+          <p className="text-sm leading-relaxed" style={{ color: '#6B6862' }}>
+            <span className="font-medium" style={{ color: '#1C1C1C' }}>{email}</span>로<br />
+            인증 메일을 보냈습니다.<br />
+            메일함을 확인하여 인증 링크를 클릭하면<br />
+            가입이 완료됩니다.
+          </p>
+          <p className="text-xs mt-4" style={{ color: '#A8A49C' }}>
+            메일이 보이지 않는다면 스팸함을 확인해 주세요.
+          </p>
+          <div className="mt-6 pt-6 border-t" style={{ borderColor: '#F2F1EE' }}>
+            <p className="text-xs mb-3" style={{ color: '#A8A49C' }}>인증을 완료하셨나요?</p>
+            <Link
+              href="/login"
+              className="block w-full py-3 rounded-lg text-sm font-medium text-white text-center"
+              style={{ backgroundColor: '#1C1C1C' }}
+            >
+              로그인하러 가기
+            </Link>
+          </div>
         </div>
       </div>
     )
@@ -85,7 +97,7 @@ export default function RegisterPage() {
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} placeholder="010-0000-0000" />
           </div>
           <div>
-            <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>비밀번호 (6자 이상)</label>
+            <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>비밀번호 (10자 이상, 특수문자 포함)</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="••••••••" />
           </div>
           <div>
