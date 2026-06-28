@@ -115,7 +115,13 @@
       "Bash($SCRIPTS/review-package ca1afb791db1a080614f36504e945da8e127ad4c *)",
       "Bash($SCRIPTS/review-package c13f2fc2bda9a2f62423a81f74cbb5d106aa96b2 *)",
       "Bash($SCRIPTS/review-package 80cfc355fdee342577dff4a74cc1fe7c921ff779 *)",
-      "Bash($SCRIPTS/review-package 213768913f67beafbeb7c3d14bd2d5c5f51581e5 *)"
+      "Bash($SCRIPTS/review-package 213768913f67beafbeb7c3d14bd2d5c5f51581e5 *)",
+      "Bash(/Users/cosmos/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/task-brief *)",
+      "Bash(/Users/cosmos/.claude/plugins/cache/claude-plugins-official/superpowers/6.0.3/skills/subagent-driven-development/scripts/review-package *)",
+      "Bash(/Users/cosmos/Desktop/Cosmos/apps/web/node_modules/.bin/tsc --noEmit)",
+      "Bash(echo \"Task 8: complete \\(commits eec4c86..$\\(git -C /Users/cosmos/Desktop/Cosmos rev-parse --short HEAD\\), review pending\\)\")",
+      "Bash(/usr/local/bin/npx tsc *)",
+      "Bash(/Users/cosmos/.local/node/bin/npx tsc *)"
     ]
   }
 }
