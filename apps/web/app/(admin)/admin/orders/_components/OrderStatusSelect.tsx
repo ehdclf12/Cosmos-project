@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { updateOrderStatus } from '../actions'
 
 const STATUS_OPTIONS = [
   { value: 'paid', label: '결제완료' },
@@ -19,10 +19,9 @@ export default function OrderStatusSelect({ id, status }: { id: string; status: 
     const prev = value
     setValue(next)
     setSaving(true)
-    const supabase = createClient()
-    const { error } = await supabase.from('orders').update({ status: next }).eq('id', id)
+    const result = await updateOrderStatus(id, next)
     setSaving(false)
-    if (error) setValue(prev)
+    if (result?.error) setValue(prev)
   }
 
   return (
