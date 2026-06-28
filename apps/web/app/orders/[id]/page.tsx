@@ -125,23 +125,23 @@ export default async function OrderDetailPage({ params }: Props) {
           const activeTotal = allItems
             .filter((i) => i.status !== 'cancelled')
             .reduce((sum, i) => sum + i.price * i.quantity, 0)
-          const hasPartialCancel = activeTotal !== order.total_amount && order.status !== 'cancelled'
+          const isFullyCancelled = order.status === 'cancelled'
+          const hasPartialCancel = !isFullyCancelled && activeTotal !== order.total_amount
+          const showStrikethrough = isFullyCancelled || hasPartialCancel
           return (
             <div className="border-t pt-4 mb-10" style={{ borderColor: '#E8E5E0' }}>
-              {hasPartialCancel && (
+              {showStrikethrough && (
                 <div className="flex justify-between mb-1">
-                  <span className="text-xs line-through" style={{ color: '#A8A49C' }}>원 결제금액</span>
+                  <span className="text-xs line-through" style={{ color: '#A8A49C' }}>기존 결제금액</span>
                   <span className="text-xs line-through" style={{ color: '#A8A49C' }}>
                     ₩{order.total_amount.toLocaleString()}
                   </span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-sm" style={{ color: '#6B6862' }}>
-                  {hasPartialCancel ? '실 결제금액' : '총 결제금액'}
-                </span>
+                <span className="text-sm" style={{ color: '#6B6862' }}>총 결제금액</span>
                 <span className="text-base font-medium" style={{ color: '#1C1C1C' }}>
-                  ₩{(hasPartialCancel ? activeTotal : order.total_amount).toLocaleString()}
+                  {isFullyCancelled ? '₩0' : `₩${(hasPartialCancel ? activeTotal : order.total_amount).toLocaleString()}`}
                 </span>
               </div>
             </div>
