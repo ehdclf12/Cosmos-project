@@ -1,6 +1,5 @@
 'use client'
 import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { saveGoods } from '../actions'
 
@@ -23,7 +22,6 @@ interface GoodsFormProps {
 }
 
 export default function GoodsForm({ categories, initial }: GoodsFormProps) {
-  const router = useRouter()
   const isEdit = !!initial?.id
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -267,7 +265,7 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
       <div className="flex gap-3 pt-2">
         <button
           type="button"
-          onClick={() => router.push('/admin/goods')}
+          onClick={() => window.location.href = '/admin/goods'}
           className="flex-1 py-3 rounded-xl text-sm border border-gray-200 hover:bg-gray-50"
           style={{ color: '#1C1C1C' }}
         >
