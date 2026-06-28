@@ -1,8 +1,10 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { cancelOrder } from '../actions'
 
 export default function CancelOrderButton({ orderId }: { orderId: string }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -14,8 +16,9 @@ export default function CancelOrderButton({ orderId }: { orderId: string }) {
     if (result?.error) {
       setError(result.error)
       setLoading(false)
+      return
     }
-    // 성공 시 revalidatePath로 페이지 자동 갱신
+    router.refresh()
   }
 
   return (
