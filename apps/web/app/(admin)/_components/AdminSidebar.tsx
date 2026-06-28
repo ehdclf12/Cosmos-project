@@ -6,17 +6,17 @@ import { usePathname } from 'next/navigation'
 const GOODS_SUB = [
   { href: '/admin/goods', label: '상품 목록' },
   { href: '/admin/goods/new', label: '상품 등록' },
+  { href: '/admin/orders', label: '주문관리' },
 ]
 
 const NAV_ITEMS = [
-  { href: '/admin/orders', label: '주문관리' },
   { href: '/admin/customers', label: '고객관리' },
   { href: '/admin/clubs', label: '독서클럽' },
 ]
 
 export default function AdminSidebar() {
   const pathname = usePathname()
-  const goodsActive = pathname.startsWith('/admin/goods')
+  const goodsActive = pathname.startsWith('/admin/goods') || pathname.startsWith('/admin/orders')
   const [open, setOpen] = useState(goodsActive)
   const dashActive = pathname === '/admin'
 
