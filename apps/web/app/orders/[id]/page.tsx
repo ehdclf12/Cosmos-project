@@ -36,14 +36,27 @@ export default async function OrderDetailPage({ params }: Props) {
       <LandingClient />
 
       <main className="pt-20 px-6 md:px-12 pb-20 max-w-2xl mx-auto">
-        {/* 완료 헤더 */}
+        {/* 상태 헤더 */}
         <div className="py-10 text-center border-b mb-10" style={{ borderColor: '#E8E5E0' }}>
-          <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#A8A49C' }}>
-            Order Confirmed
-          </p>
-          <h1 className="text-2xl font-light tracking-widest mb-2" style={{ color: '#1C1C1C' }}>
-            주문이 완료되었습니다
-          </h1>
+          {order.status === 'cancelled' ? (
+            <>
+              <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#A8A49C' }}>
+                Order Cancelled
+              </p>
+              <h1 className="text-2xl font-light tracking-widest mb-2" style={{ color: '#1C1C1C' }}>
+                주문이 취소되었습니다
+              </h1>
+            </>
+          ) : (
+            <>
+              <p className="text-xs tracking-widest uppercase mb-3" style={{ color: '#A8A49C' }}>
+                Order Confirmed
+              </p>
+              <h1 className="text-2xl font-light tracking-widest mb-2" style={{ color: '#1C1C1C' }}>
+                주문이 완료되었습니다
+              </h1>
+            </>
+          )}
           <p className="text-sm" style={{ color: '#6B6862' }}>
             주문번호: {shortId} · {orderDate}
           </p>
