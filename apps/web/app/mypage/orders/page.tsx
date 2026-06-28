@@ -9,7 +9,7 @@ export default async function MyOrdersPage() {
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('id, status, total_amount, created_at, order_items(id, title, quantity)')
+    .select('id, status, total_amount, created_at, order_items(id, title, quantity, price, status)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -41,10 +41,19 @@ export default async function MyOrdersPage() {
       ) : (
         <div className="space-y-3">
           {rows.map((order) => {
-            const items = order.order_items ?? []
-            const firstTitle = items[0]?.title ?? '상품'
-            const extraCount = items.length - 1
+            type Item = { id: string; title: string; quantity: number; price: number; status: string }
+            const allItems: Item[] = (order.order_items ?? []) as Item[]
+            const activeItems = allItems.filter((i) => i.status !== 'cancelled')
+            const displayItems = activeItems.length > 0 ? activeItems : allItems
+
+            const firstTitle = displayItems[0]?.title ?? '상품'
+            const extraCount = displayItems.length - 1
             const label = extraCount > 0 ? `${firstTitle} 외 ${extraCount}건` : firstTitle
+
+            const displayAmount = activeItems.length > 0
+              ? activeItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
+              : 0
+
             const orderDate = new Date(order.created_at).toLocaleDateString('ko-KR', {
               year: 'numeric',
               month: '2-digit',
@@ -67,7 +76,7 @@ export default async function MyOrdersPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium mb-1" style={{ color: '#1C1C1C' }}>
-                      ₩{order.total_amount.toLocaleString()}
+                      {order.status === 'cancelled' ? '-' : `₩${displayAmount.toLocaleString()}`}
                     </p>
                     <p className="text-xs" style={{ color: '#6B6862' }}>
                       {STATUS_LABEL[order.status] ?? order.status}
