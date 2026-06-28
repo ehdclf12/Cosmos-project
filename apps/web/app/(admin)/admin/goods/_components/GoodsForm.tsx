@@ -2,6 +2,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { saveGoods } from '../actions'
 
 interface Category { id: string; name: string }
 
@@ -13,6 +14,7 @@ interface GoodsFormProps {
     description: string | null
     price: number
     discount_rate: number
+    stock_quantity: number
     images: string[]
     status: 'active' | 'sold_out' | 'draft'
     category_id: string | null
@@ -30,6 +32,7 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
     description: initial?.description ?? '',
     price: initial?.price?.toString() ?? '',
     discount_rate: initial?.discount_rate?.toString() ?? '0',
+    stock_quantity: initial?.stock_quantity?.toString() ?? '0',
     status: initial?.status ?? ('draft' as 'active' | 'sold_out' | 'draft'),
     category_id: initial?.category_id ?? '',
     published_at: initial?.published_at
@@ -37,7 +40,6 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
       : '',
   })
   const [images, setImages] = useState<string[]>(initial?.images ?? [])
-  const [pendingDeletes, setPendingDeletes] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -74,41 +76,33 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  function removeImage(url: string) {
-    // Only remove from local preview; delete from Storage only on save
-    const path = url.split('/goods-images/')[1]
-    if (path) setPendingDeletes((prev) => [...prev, path])
+  async function removeImage(url: string) {
     setImages((prev) => prev.filter((u) => u !== url))
+    const path = url.split('/goods-images/')[1]
+    if (path) {
+      const supabase = createClient()
+      await supabase.storage.from('goods-images').remove([path])
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const supabase = createClient()
     const payload = {
       title: form.title,
       description: form.description || null,
       price: Number(form.price),
       discount_rate: discountRate,
+      stock_quantity: Math.max(0, Number(form.stock_quantity) || 0),
       images,
       status: form.status,
       category_id: form.category_id || null,
       published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
     }
 
-    const { error: err } = isEdit
-      ? await supabase.from('goods').update(payload).eq('id', initial!.id)
-      : await supabase.from('goods').insert(payload)
-
-    setLoading(false)
-    if (err) { setError(err.message); return }
-    if (pendingDeletes.length > 0) {
-      const supabaseClient = createClient()
-      await supabaseClient.storage.from('goods-images').remove(pendingDeletes)
-    }
-    router.push('/admin/goods')
-    router.refresh()
+    const result = await saveGoods(isEdit ? initial!.id : null, payload)
+    if (result?.error) { setError(result.error); setLoading(false); return }
   }
 
   const field = "w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-gray-400 bg-white"
@@ -171,6 +165,18 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
           {discountRate > 0 && <span className="ml-2 text-xs">({discountRate}% 할인)</span>}
         </div>
       )}
+
+      <div>
+        <label className={lbl} style={{ color: '#1C1C1C' }}>재고 수량 (개)</label>
+        <input
+          type="number"
+          value={form.stock_quantity}
+          onChange={(e) => set('stock_quantity', e.target.value)}
+          className={field}
+          style={{ color: '#1C1C1C' }}
+          min={0}
+        />
+      </div>
 
       <div>
         <label className={lbl} style={{ color: '#1C1C1C' }}>카테고리</label>

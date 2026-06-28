@@ -14,7 +14,7 @@ export default async function EditGoodsPage({ params }: Props) {
   const [{ data: item }, { data: categories }] = await Promise.all([
     supabase
       .from('goods')
-      .select('id, title, description, price, discount_rate, images, status, category_id, published_at')
+      .select('id, title, description, price, discount_rate, stock_quantity, images, status, category_id, published_at')
       .eq('id', id)
       .single(),
     supabase.from('categories').select('id, name').order('name'),
@@ -33,6 +33,7 @@ export default async function EditGoodsPage({ params }: Props) {
           description: item.description,
           price: item.price,
           discount_rate: item.discount_rate ?? 0,
+          stock_quantity: item.stock_quantity ?? 0,
           images: item.images ?? [],
           status: item.status,
           category_id: item.category_id,
