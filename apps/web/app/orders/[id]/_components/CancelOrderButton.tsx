@@ -18,7 +18,7 @@ export default function CancelOrderButton({ orderId }: { orderId: string }) {
       setLoading(false)
       return
     }
-    router.refresh()
+    router.push('/mypage/orders')
   }
 
   return (
