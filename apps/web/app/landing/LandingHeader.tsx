@@ -6,10 +6,11 @@ import { useCartStore } from '@/lib/cart-store'
 interface Props {
   onMenuClick: () => void
   nickname: string | null
+  isAdmin: boolean
   onLogout: () => void
 }
 
-export default function LandingHeader({ onMenuClick, nickname, onLogout }: Props) {
+export default function LandingHeader({ onMenuClick, nickname, isAdmin, onLogout }: Props) {
   const [cartCount, setCartCount] = useState(0)
 
   useEffect(() => {
@@ -40,6 +41,17 @@ export default function LandingHeader({ onMenuClick, nickname, onLogout }: Props
       </div>
 
       <div className="flex items-center gap-3">
+        {/* 어드민 계정일 때만 노출 */}
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className="text-xs tracking-widest uppercase px-3 py-1.5 border transition-colors hover:bg-black hover:text-white"
+            style={{ borderColor: '#6B6862', color: '#6B6862' }}
+          >
+            Admin
+          </Link>
+        )}
+
         {nickname && (
           <Link
             href={cartCount > 0 ? '/checkout' : '/goods'}
