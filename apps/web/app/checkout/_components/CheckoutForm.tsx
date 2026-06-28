@@ -1,9 +1,10 @@
 'use client'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useCartStore, CartItem } from '@/lib/cart-store'
 import { createClient } from '@/lib/supabase/client'
+import AddressSearchInput from './AddressSearchInput'
 
 interface Props {
   userId: string
@@ -47,8 +48,15 @@ export default function CheckoutForm({ userId, directItem }: Props) {
 
   const [recipientName, setRecipientName] = useState('')
   const [recipientPhone, setRecipientPhone] = useState('')
-  const [shippingAddress, setShippingAddress] = useState('')
+  const [zonecode, setZonecode] = useState('')
+  const [baseAddress, setBaseAddress] = useState('')
+  const [detailAddress, setDetailAddress] = useState('')
   const [memo, setMemo] = useState('')
+
+  const handleAddressSelect = useCallback((zc: string, addr: string) => {
+    setZonecode(zc)
+    setBaseAddress(addr)
+  }, [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -81,7 +89,8 @@ export default function CheckoutForm({ userId, directItem }: Props) {
     setError('')
     if (!recipientName.trim()) { setError('수령인명을 입력해주세요.'); return }
     if (!recipientPhone.trim()) { setError('연락처를 입력해주세요.'); return }
-    if (!shippingAddress.trim()) { setError('배송지를 입력해주세요.'); return }
+    if (!zonecode || !baseAddress) { setError('주소검색으로 기본 주소를 입력해주세요.'); return }
+    if (!detailAddress.trim()) { setError('나머지 주소(동/호수 등)를 입력해주세요.'); return }
     if (selectedItems.length === 0) { setError('주문할 상품을 선택해주세요.'); return }
 
     setLoading(true)
@@ -95,7 +104,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
         total_amount: totalAmount,
         recipient_name: recipientName.trim(),
         recipient_phone: recipientPhone.trim(),
-        shipping_address: shippingAddress.trim(),
+        shipping_address: `(${zonecode}) ${baseAddress} ${detailAddress.trim()}`,
         memo: memo.trim() || null,
       })
       .select('id')
@@ -178,12 +187,13 @@ export default function CheckoutForm({ userId, directItem }: Props) {
               </div>
               <div>
                 <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>배송지</label>
-                <input
-                  type="text"
-                  value={shippingAddress}
-                  onChange={(e) => setShippingAddress(e.target.value)}
-                  className={inputClass}
-                  placeholder="서울특별시 마포구 ..."
+                <AddressSearchInput
+                  zonecode={zonecode}
+                  baseAddress={baseAddress}
+                  detailAddress={detailAddress}
+                  onAddressSelect={handleAddressSelect}
+                  onDetailChange={setDetailAddress}
+                  inputClass={inputClass}
                 />
               </div>
               <div>
