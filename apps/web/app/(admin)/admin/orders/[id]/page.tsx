@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin-client'
 import OrderStatusSelect from '../_components/OrderStatusSelect'
+import AdminCancelItemButton from './_components/AdminCancelItemButton'
 
 export const metadata: Metadata = { title: '주문 상세 — Cosmos Admin' }
 
@@ -81,11 +82,13 @@ export default async function OrderDetailPage({ params }: Props) {
                 <th className="px-4 py-3 font-normal text-right">단가</th>
                 <th className="px-4 py-3 font-normal text-right">소계</th>
                 <th className="px-4 py-3 font-normal text-center">상태</th>
+                <th className="px-4 py-3 font-normal text-center">관리</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item) => {
                 const isCancelled = item.status === 'cancelled'
+                const canCancel = !isCancelled && order.status !== 'cancelled' && order.status !== 'delivered'
                 return (
                   <tr key={item.id} style={{ borderTop: '1px solid rgba(28,28,28,0.1)', opacity: isCancelled ? 0.5 : 1 }}>
                     <td className="px-4 py-3" style={{ color: '#1C1C1C', textDecoration: isCancelled ? 'line-through' : 'none' }}>
@@ -109,6 +112,15 @@ export default async function OrderDetailPage({ params }: Props) {
                         </span>
                       )}
                     </td>
+                    <td className="px-4 py-3 text-center">
+                      {canCancel && (
+                        <AdminCancelItemButton
+                          orderId={order.id}
+                          itemId={item.id}
+                          itemTitle={item.title}
+                        />
+                      )}
+                    </td>
                   </tr>
                 )
               })}
@@ -119,7 +131,7 @@ export default async function OrderDetailPage({ params }: Props) {
                 <td className="px-4 py-3 text-right font-medium" style={{ color: '#1C1C1C' }}>
                   {(hasPartialCancel ? activeTotal : (order.total_amount ?? 0)).toLocaleString()}원
                 </td>
-                <td />
+                <td /><td />
               </tr>
               {hasPartialCancel && (
                 <tr>
@@ -129,7 +141,7 @@ export default async function OrderDetailPage({ params }: Props) {
                   <td className="px-4 py-1 text-right text-xs line-through" style={{ color: '#A8A49C' }}>
                     {(order.total_amount ?? 0).toLocaleString()}원
                   </td>
-                  <td />
+                  <td /><td />
                 </tr>
               )}
             </tbody>

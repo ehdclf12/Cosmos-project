@@ -49,27 +49,20 @@ export async function cancelOrderItem(orderId: string, itemId: string) {
     return { error: '배송이 시작된 주문은 취소할 수 없습니다.' }
   }
 
-  // 취소할 아이템 조회
-  const { data: item } = await supabase
-    .from('order_items')
-    .select('id, goods_id, quantity, status')
-    .eq('id', itemId)
-    .eq('order_id', orderId)
-    .single()
-
-  if (!item) return { error: '상품을 찾을 수 없습니다.' }
-  if (item.status === 'cancelled') return { error: '이미 취소된 상품입니다.' }
-
-  // 아이템 취소
-  const { error: updateError } = await supabase
+  // status='active' 조건 포함 atomic UPDATE — 동시 요청 시 한 번만 성공
+  const { data: updated, error: updateError } = await supabase
     .from('order_items')
     .update({ status: 'cancelled' })
     .eq('id', itemId)
+    .eq('order_id', orderId)
+    .eq('status', 'active')
+    .select('goods_id, quantity')
 
   if (updateError) return { error: updateError.message }
+  if (!updated || updated.length === 0) return { error: '이미 취소된 상품입니다.' }
 
-  // 재고 복원
-  await supabase.rpc('restore_stock', { p_goods_id: item.goods_id, p_quantity: item.quantity })
+  // UPDATE 성공한 경우에만 재고 복원 (이중 복원 방지)
+  await supabase.rpc('restore_stock', { p_goods_id: updated[0].goods_id, p_quantity: updated[0].quantity })
 
   // 모든 아이템이 취소됐으면 주문 전체 취소 처리
   const { data: remaining } = await supabase
