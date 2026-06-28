@@ -16,7 +16,10 @@ export default async function MyOrdersPage() {
   const rows = orders ?? []
 
   const STATUS_LABEL: Record<string, string> = {
-    paid: '결제 완료',
+    paid: '결제완료',
+    preparing: '상품준비중',
+    shipping: '배송중',
+    delivered: '배송완료',
     cancelled: '취소됨',
   }
 

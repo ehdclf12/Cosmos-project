@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import LandingClient from '@/app/landing/LandingClient'
+import CancelOrderButton from './_components/CancelOrderButton'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -118,6 +119,13 @@ export default async function OrderDetailPage({ params }: Props) {
             주문 내역 보기
           </Link>
         </div>
+
+        {/* 취소 버튼 — paid/preparing 상태일 때만 표시 */}
+        {['paid', 'preparing'].includes(order.status) && (
+          <div className="mt-4">
+            <CancelOrderButton orderId={order.id} />
+          </div>
+        )}
       </main>
     </div>
   )
