@@ -96,14 +96,19 @@ export default function AddressSearchInput({
       />
 
       {/* 나머지 주소 */}
-      <input
-        ref={detailRef}
-        type="text"
-        value={detailAddress}
-        onChange={(e) => onDetailChange(e.target.value)}
-        placeholder="나머지 주소 (동/호수 등)"
-        className={inputClass}
-      />
+      <div>
+        <p className="text-xs mb-1" style={{ color: '#A8A49C' }}>
+          나머지 주소 <span style={{ color: '#dc2626' }}>*</span>
+        </p>
+        <input
+          ref={detailRef}
+          type="text"
+          value={detailAddress}
+          onChange={(e) => onDetailChange(e.target.value)}
+          placeholder="동, 호수, 층 등을 입력해주세요"
+          className={inputClass}
+        />
+      </div>
 
       {/* 카카오 주소검색 모달 */}
       {open && (
