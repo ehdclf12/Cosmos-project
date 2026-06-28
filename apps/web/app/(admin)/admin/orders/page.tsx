@@ -1,20 +1,111 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import OrderStatusSelect from './_components/OrderStatusSelect'
+import Pagination from '@/app/components/Pagination'
 
 export const metadata: Metadata = { title: '주문 관리 — Cosmos Admin' }
 
-export default async function AdminOrdersPage() {
+const PAGE_SIZE = 20
+
+const STATUS_LABEL: Record<string, string> = {
+  paid: '결제완료',
+  preparing: '상품준비중',
+  shipping: '배송중',
+  delivered: '배송완료',
+  cancelled: '취소됨',
+}
+
+interface Props {
+  searchParams: Promise<{ q?: string; status?: string; from?: string; to?: string; page?: string }>
+}
+
+export default async function AdminOrdersPage({ searchParams }: Props) {
+  const sp = await searchParams
+  const q = sp.q ?? ''
+  const statusFilter = sp.status ?? ''
+  const dateFrom = sp.from ?? ''
+  const dateTo = sp.to ?? ''
+  const page = Math.max(1, Number(sp.page) || 1)
   const supabase = await createClient()
-  const { data: orders } = await supabase
+
+  // 고객명 검색 시 profile IDs 선조회
+  let profileIds: string[] = []
+  if (q) {
+    const { data: matched } = await supabase
+      .from('profiles')
+      .select('id')
+      .ilike('display_name', `%${q}%`)
+    profileIds = (matched ?? []).map((p) => p.id)
+  }
+
+  let query = supabase
     .from('orders')
-    .select('id, status, total_amount, created_at, profiles(display_name), order_items(title, quantity)')
+    .select(
+      'id, status, total_amount, created_at, profiles(display_name), order_items(title, quantity)',
+      { count: 'exact' }
+    )
+
+  if (q) {
+    const idFilter = `id.ilike.%${q}%`
+    const nameFilter = profileIds.length > 0 ? `,user_id.in.(${profileIds.join(',')})` : ''
+    query = query.or(idFilter + nameFilter)
+  }
+  if (statusFilter) query = query.eq('status', statusFilter)
+  if (dateFrom) query = query.gte('created_at', dateFrom)
+  if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59')
+
+  const from = (page - 1) * PAGE_SIZE
+  const { data: orders, count: totalCount } = await query
     .order('created_at', { ascending: false })
+    .range(from, from + PAGE_SIZE - 1)
+
+  const spRecord: Record<string, string> = {}
+  if (q) spRecord.q = q
+  if (statusFilter) spRecord.status = statusFilter
+  if (dateFrom) spRecord.from = dateFrom
+  if (dateTo) spRecord.to = dateTo
 
   return (
     <div>
       <h1 className="text-2xl font-light mb-6" style={{ color: '#1C1C1C' }}>주문 관리</h1>
 
+      {/* 검색/필터 폼 */}
+      <form method="get" className="flex flex-wrap gap-2 mb-6">
+        <input
+          name="q"
+          defaultValue={q}
+          placeholder="주문번호 / 고객명 검색"
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 bg-white"
+          style={{ color: '#1C1C1C', minWidth: 200 }}
+        />
+        <select
+          name="status"
+          defaultValue={statusFilter}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none"
+          style={{ color: '#1C1C1C' }}
+        >
+          <option value="">전체 상태</option>
+          {Object.entries(STATUS_LABEL).map(([v, l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+        </select>
+        <input type="date" name="from" defaultValue={dateFrom}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none" style={{ color: '#1C1C1C' }} />
+        <span className="self-center text-sm" style={{ color: '#1C1C1C' }}>~</span>
+        <input type="date" name="to" defaultValue={dateTo}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none" style={{ color: '#1C1C1C' }} />
+        <button type="submit" className="px-4 py-2 rounded-xl text-sm text-white" style={{ backgroundColor: '#1C1C1C' }}>
+          검색
+        </button>
+        {(q || statusFilter || dateFrom || dateTo) && (
+          <a href="/admin/orders" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
+            초기화
+          </a>
+        )}
+      </form>
+
+      {/* 주문 목록 테이블 */}
       <table className="w-full text-sm">
         <thead>
           <tr className="text-left" style={{ color: '#1C1C1C' }}>
@@ -32,7 +123,15 @@ export default async function AdminOrdersPage() {
             const itemLabel = items.map((i) => `${i.title} x${i.quantity}`).join(', ')
             return (
               <tr key={order.id} style={{ borderTop: '1px solid #E8E5E0' }}>
-                <td className="py-3" style={{ color: '#1C1C1C' }}>{order.id.slice(0, 8).toUpperCase()}</td>
+                <td className="py-3">
+                  <Link
+                    href={`/admin/orders/${order.id}`}
+                    className="hover:underline font-mono"
+                    style={{ color: '#1C1C1C' }}
+                  >
+                    {order.id.slice(0, 8).toUpperCase()}
+                  </Link>
+                </td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
                   {(order.profiles as any)?.display_name ?? '-'}
                 </td>
@@ -49,11 +148,15 @@ export default async function AdminOrdersPage() {
           })}
           {(orders ?? []).length === 0 && (
             <tr>
-              <td colSpan={6} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>주문이 없습니다.</td>
+              <td colSpan={6} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>
+                {q || statusFilter || dateFrom || dateTo ? '검색 결과가 없습니다.' : '주문이 없습니다.'}
+              </td>
             </tr>
           )}
         </tbody>
       </table>
+
+      <Pagination page={page} totalCount={totalCount ?? 0} pageSize={PAGE_SIZE} searchParams={spRecord} />
     </div>
   )
 }
