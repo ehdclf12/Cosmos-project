@@ -18,19 +18,21 @@ export default async function OrderDetailPage({ params }: Props) {
     .from('orders')
     .select(`
       id, status, total_amount, created_at, user_id,
-      profiles(id, display_name),
-      order_items(id, title, quantity, unit_price)
+      order_items(id, title, quantity, price)
     `)
     .eq('id', id)
     .single()
 
   if (!order) notFound()
 
-  const { data: authData } = await adminClient.auth.admin.getUserById(order.user_id)
+  const [{ data: authData }, { data: profileData }] = await Promise.all([
+    adminClient.auth.admin.getUserById(order.user_id),
+    supabase.from('profiles').select('id, display_name').eq('id', order.user_id).single(),
+  ])
   const authUser = authData?.user ?? null
+  const profile = profileData
 
-  const profile = order.profiles as any
-  const items = (order.order_items as { id: string; title: string; quantity: number; unit_price: number }[]) ?? []
+  const items = (order.order_items as { id: string; title: string; quantity: number; price: number }[]) ?? []
 
   return (
     <div>
@@ -70,10 +72,10 @@ export default async function OrderDetailPage({ params }: Props) {
                   <td className="px-4 py-3" style={{ color: '#1C1C1C' }}>{item.title}</td>
                   <td className="px-4 py-3 text-right" style={{ color: '#1C1C1C' }}>{item.quantity}</td>
                   <td className="px-4 py-3 text-right" style={{ color: '#1C1C1C' }}>
-                    {(item.unit_price ?? 0).toLocaleString()}원
+                    {(item.price ?? 0).toLocaleString()}원
                   </td>
                   <td className="px-4 py-3 text-right" style={{ color: '#1C1C1C' }}>
-                    {((item.quantity ?? 0) * (item.unit_price ?? 0)).toLocaleString()}원
+                    {((item.quantity ?? 0) * (item.price ?? 0)).toLocaleString()}원
                   </td>
                 </tr>
               ))}

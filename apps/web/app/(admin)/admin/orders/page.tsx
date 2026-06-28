@@ -43,7 +43,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   let query = supabase
     .from('orders')
     .select(
-      'id, status, total_amount, created_at, profiles(display_name), order_items(title, quantity)',
+      'id, status, total_amount, created_at, user_id, order_items(title, quantity)',
       { count: 'exact' }
     )
 
@@ -60,6 +60,15 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   const { data: orders, count: totalCount } = await query
     .order('created_at', { ascending: false })
     .range(from, from + PAGE_SIZE - 1)
+
+  const userIds = [...new Set((orders ?? []).map((o) => o.user_id).filter(Boolean))]
+  const { data: profileRows } = userIds.length > 0
+    ? await supabase.from('profiles').select('id, display_name').in('id', userIds)
+    : { data: [] }
+  const profileMap = (profileRows ?? []).reduce<Record<string, string>>((acc, p) => {
+    acc[p.id] = p.display_name
+    return acc
+  }, {})
 
   const spRecord: Record<string, string> = {}
   if (q) spRecord.q = q
@@ -134,7 +143,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                   </Link>
                 </td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
-                  {(order.profiles as any)?.display_name ?? '-'}
+                  {profileMap[order.user_id] ?? '-'}
                 </td>
                 <td className="py-3 max-w-xs truncate" style={{ color: '#1C1C1C' }}>{itemLabel || '-'}</td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>{(order.total_amount ?? 0).toLocaleString()}원</td>

@@ -80,6 +80,13 @@ export default function CheckoutForm({ userId }: Props) {
       return
     }
 
+    // 재고 차감 (security definer 함수 — 실패해도 주문은 유지)
+    await Promise.all(
+      items.map((item: CartItem) =>
+        supabase.rpc('decrement_stock', { p_goods_id: item.goodsId, p_quantity: item.quantity })
+      )
+    )
+
     clear()
     router.push(`/orders/${order.id}`)
   }
