@@ -23,6 +23,7 @@ interface Props {
 export default async function AdminOrdersPage({ searchParams }: Props) {
   const sp = await searchParams
   const q = sp.q ?? ''
+  const qSafe = q.replace(/[,().]/g, '')
   const statusFilter = sp.status ?? ''
   const dateFrom = sp.from ?? ''
   const dateTo = sp.to ?? ''
@@ -31,11 +32,11 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
 
   // 고객명 검색 시 profile IDs 선조회
   let profileIds: string[] = []
-  if (q) {
+  if (qSafe) {
     const { data: matched } = await supabase
       .from('profiles')
       .select('id')
-      .ilike('display_name', `%${q}%`)
+      .ilike('display_name', `%${qSafe}%`)
     profileIds = (matched ?? []).map((p) => p.id)
   }
 
@@ -46,8 +47,8 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
       { count: 'exact' }
     )
 
-  if (q) {
-    const idFilter = `id.ilike.%${q}%`
+  if (qSafe) {
+    const idFilter = `id.ilike.%${qSafe}%`
     const nameFilter = profileIds.length > 0 ? `,user_id.in.(${profileIds.join(',')})` : ''
     query = query.or(idFilter + nameFilter)
   }

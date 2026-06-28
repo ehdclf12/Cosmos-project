@@ -40,7 +40,6 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
     supabase.from('orders').select('user_id'),
   ])
 
-  // 이메일 검색 적용 (auth users에서 필터)
   const emailMap = (users ?? []).reduce<Record<string, string>>((acc, u) => {
     acc[u.id] = u.email ?? ''
     return acc
@@ -51,16 +50,11 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
     return acc
   }, {})
 
-  // 이메일로도 검색 (q가 '@' 포함 시)
-  let customers = (profiles ?? []).map((p) => ({
+  const customers = (profiles ?? []).map((p) => ({
     ...p,
     email: emailMap[p.id] ?? '',
     orderCount: countByUser[p.id] ?? 0,
   }))
-
-  if (q && q.includes('@')) {
-    customers = customers.filter((c) => c.email.toLowerCase().includes(q.toLowerCase()))
-  }
 
   const spRecord: Record<string, string> = {}
   if (q) spRecord.q = q
@@ -76,7 +70,7 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
         <input
           name="q"
           defaultValue={q}
-          placeholder="이름 / 이메일 검색"
+          placeholder="이름 검색"
           className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-gray-400 bg-white"
           style={{ color: '#1C1C1C', minWidth: 200 }}
         />

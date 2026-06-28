@@ -26,7 +26,8 @@ export default async function OrderDetailPage({ params }: Props) {
 
   if (!order) notFound()
 
-  const { data: { user: authUser } } = await adminClient.auth.admin.getUserById(order.user_id)
+  const { data: authData } = await adminClient.auth.admin.getUserById(order.user_id)
+  const authUser = authData?.user ?? null
 
   const profile = order.profiles as any
   const items = (order.order_items as { id: string; title: string; quantity: number; unit_price: number }[]) ?? []

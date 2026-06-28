@@ -14,11 +14,14 @@ interface GoodsPayload {
   published_at: string | null
 }
 
-export async function saveGoods(id: string | null, payload: GoodsPayload) {
+export async function saveGoods(id: string | null, payload: GoodsPayload, imagesToDelete: string[] = []) {
   const supabase = await createClient()
   const { error } = id
     ? await supabase.from('goods').update(payload).eq('id', id)
     : await supabase.from('goods').insert(payload)
   if (error) return { error: error.message }
+  if (imagesToDelete.length > 0) {
+    await supabase.storage.from('goods-images').remove(imagesToDelete)
+  }
   redirect('/admin/goods')
 }

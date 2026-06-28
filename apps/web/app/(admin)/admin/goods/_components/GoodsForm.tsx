@@ -38,6 +38,7 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
       : '',
   })
   const [images, setImages] = useState<string[]>(initial?.images ?? [])
+  const [pendingDeletes, setPendingDeletes] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -74,13 +75,10 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  async function removeImage(url: string) {
-    setImages((prev) => prev.filter((u) => u !== url))
+  function removeImage(url: string) {
     const path = url.split('/goods-images/')[1]
-    if (path) {
-      const supabase = createClient()
-      await supabase.storage.from('goods-images').remove([path])
-    }
+    if (path) setPendingDeletes((prev) => [...prev, path])
+    setImages((prev) => prev.filter((u) => u !== url))
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -99,7 +97,7 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
       published_at: form.published_at ? new Date(form.published_at).toISOString() : null,
     }
 
-    const result = await saveGoods(isEdit ? initial!.id : null, payload)
+    const result = await saveGoods(isEdit ? initial!.id : null, payload, pendingDeletes)
     if (result?.error) { setError(result.error); setLoading(false); return }
   }
 
