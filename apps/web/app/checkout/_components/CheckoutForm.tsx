@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useCartStore, CartItem } from '@/lib/cart-store'
@@ -7,15 +7,43 @@ import { createClient } from '@/lib/supabase/client'
 
 interface Props {
   userId: string
+  directItem: CartItem | null
 }
 
-export default function CheckoutForm({ userId }: Props) {
+export default function CheckoutForm({ userId, directItem }: Props) {
   const router = useRouter()
-  const items = useCartStore((s) => s.items)
-  const totalAmount = useCartStore((s) => s.totalAmount())
+  const cartItems = useCartStore((s) => s.items)
   const updateQuantity = useCartStore((s) => s.updateQuantity)
   const removeItem = useCartStore((s) => s.removeItem)
-  const clear = useCartStore((s) => s.clear)
+
+  const isDirectBuy = directItem !== null
+  const items = isDirectBuy ? [directItem] : cartItems
+
+  // 체크박스 선택 (장바구니 모드 전용)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() =>
+    new Set(cartItems.map((i) => i.goodsId))
+  )
+
+  // 장바구니 아이템 변경 시 새 아이템 자동 선택
+  useEffect(() => {
+    if (isDirectBuy) return
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      cartItems.forEach((i) => {
+        if (!next.has(i.goodsId)) next.add(i.goodsId)
+      })
+      return next
+    })
+  }, [cartItems, isDirectBuy])
+
+  const selectedItems = isDirectBuy
+    ? items
+    : items.filter((i) => selectedIds.has(i.goodsId))
+
+  const totalAmount = useMemo(
+    () => selectedItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
+    [selectedItems]
+  )
 
   const [recipientName, setRecipientName] = useState('')
   const [recipientPhone, setRecipientPhone] = useState('')
@@ -24,19 +52,37 @@ export default function CheckoutForm({ userId }: Props) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // 장바구니가 비었을 때만 리다이렉트 (직접 구매 모드는 제외)
   useEffect(() => {
-    if (!loading && items.length === 0) router.replace('/goods')
-  }, [items.length, loading, router])
+    if (!isDirectBuy && !loading && cartItems.length === 0) router.replace('/goods')
+  }, [cartItems.length, isDirectBuy, loading, router])
 
   const inputClass =
     'w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-black outline-none focus:border-gray-400 transition-colors'
+
+  function toggleSelect(goodsId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(goodsId)) next.delete(goodsId)
+      else next.add(goodsId)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    if (selectedIds.size === items.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(items.map((i) => i.goodsId)))
+    }
+  }
 
   async function handleOrder() {
     setError('')
     if (!recipientName.trim()) { setError('수령인명을 입력해주세요.'); return }
     if (!recipientPhone.trim()) { setError('연락처를 입력해주세요.'); return }
     if (!shippingAddress.trim()) { setError('배송지를 입력해주세요.'); return }
-    if (items.length === 0) { setError('장바구니가 비어있습니다.'); return }
+    if (selectedItems.length === 0) { setError('주문할 상품을 선택해주세요.'); return }
 
     setLoading(true)
     const supabase = createClient()
@@ -62,7 +108,7 @@ export default function CheckoutForm({ userId }: Props) {
     }
 
     const { error: itemsError } = await supabase.from('order_items').insert(
-      items.map((item: CartItem) => ({
+      selectedItems.map((item: CartItem) => ({
         order_id: order.id,
         goods_id: item.goodsId,
         title: item.title,
@@ -73,25 +119,27 @@ export default function CheckoutForm({ userId }: Props) {
     )
 
     if (itemsError) {
-      // MVP: compensating delete — production should use a DB transaction (RPC)
       await supabase.from('orders').delete().eq('id', order.id)
       setError('주문 항목 저장 중 오류가 발생했습니다.')
       setLoading(false)
       return
     }
 
-    // 재고 차감 (security definer 함수 — 실패해도 주문은 유지)
     await Promise.all(
-      items.map((item: CartItem) =>
+      selectedItems.map((item: CartItem) =>
         supabase.rpc('decrement_stock', { p_goods_id: item.goodsId, p_quantity: item.quantity })
       )
     )
 
-    clear()
+    if (!isDirectBuy) {
+      // 주문한 항목만 장바구니에서 제거
+      selectedItems.forEach((item) => removeItem(item.goodsId))
+    }
+
     router.push(`/orders/${order.id}`)
   }
 
-  if (items.length === 0) return null
+  if (!isDirectBuy && cartItems.length === 0) return null
 
   return (
     <div style={{ backgroundColor: '#F2F1EE', minHeight: '100vh' }}>
@@ -154,69 +202,105 @@ export default function CheckoutForm({ userId }: Props) {
 
             <button
               onClick={handleOrder}
-              disabled={loading}
+              disabled={loading || selectedItems.length === 0}
               className="w-full mt-8 py-4 text-sm tracking-wide text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: '#1C1C1C' }}
             >
-              {loading ? '처리 중...' : `₩${totalAmount.toLocaleString()} 주문하기`}
+              {loading
+                ? '처리 중...'
+                : selectedItems.length === 0
+                ? '상품을 선택해주세요'
+                : `₩${totalAmount.toLocaleString()} 주문하기`}
             </button>
           </div>
 
-          {/* 우: 장바구니 요약 */}
+          {/* 우: 상품 목록 */}
           <div className="w-full md:w-80">
-            <h2 className="text-sm tracking-widest uppercase mb-6" style={{ color: '#6B6862' }}>
-              주문 상품 ({items.length})
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-sm tracking-widest uppercase" style={{ color: '#6B6862' }}>
+                주문 상품 ({items.length})
+              </h2>
+              {!isDirectBuy && items.length > 1 && (
+                <button
+                  onClick={toggleAll}
+                  className="text-xs underline"
+                  style={{ color: '#A8A49C' }}
+                >
+                  {selectedIds.size === items.length ? '전체 해제' : '전체 선택'}
+                </button>
+              )}
+            </div>
             <div className="space-y-4">
-              {items.map((item) => (
-                <div key={item.goodsId} className="flex gap-3">
+              {items.map((item) => {
+                const isSelected = isDirectBuy || selectedIds.has(item.goodsId)
+                return (
                   <div
-                    className="relative w-16 h-20 shrink-0 overflow-hidden"
-                    style={{ backgroundColor: '#E8E5E0' }}
+                    key={item.goodsId}
+                    className="flex gap-3 transition-opacity"
+                    style={{ opacity: isSelected ? 1 : 0.4 }}
                   >
-                    {item.imageUrl && (
-                      <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
+                    {!isDirectBuy && (
+                      <div className="flex items-start pt-1">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelect(item.goodsId)}
+                          className="w-4 h-4 cursor-pointer accent-black"
+                        />
+                      </div>
                     )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm line-clamp-2 mb-1" style={{ color: '#1C1C1C' }}>{item.title}</p>
-                    <p className="text-xs mb-2" style={{ color: '#6B6862' }}>
-                      ₩{item.price.toLocaleString()}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => updateQuantity(item.goodsId, item.quantity - 1)}
-                        className="w-6 h-6 border flex items-center justify-center text-xs transition-colors hover:bg-black hover:text-white"
-                        style={{ borderColor: '#E8E5E0', color: '#1C1C1C' }}
-                      >
-                        −
-                      </button>
-                      <span className="text-xs w-4 text-center" style={{ color: '#1C1C1C' }}>
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.goodsId, item.quantity + 1)}
-                        className="w-6 h-6 border flex items-center justify-center text-xs transition-colors hover:bg-black hover:text-white"
-                        style={{ borderColor: '#E8E5E0', color: '#1C1C1C' }}
-                      >
-                        +
-                      </button>
-                      <button
-                        onClick={() => removeItem(item.goodsId)}
-                        className="ml-2 text-xs transition-opacity hover:opacity-60"
-                        style={{ color: '#A8A49C' }}
-                      >
-                        삭제
-                      </button>
+                    <div
+                      className="relative w-16 h-20 shrink-0 overflow-hidden"
+                      style={{ backgroundColor: '#E8E5E0' }}
+                    >
+                      {item.imageUrl && (
+                        <Image src={item.imageUrl} alt={item.title} fill className="object-cover" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm line-clamp-2 mb-1" style={{ color: '#1C1C1C' }}>{item.title}</p>
+                      <p className="text-xs mb-2" style={{ color: '#6B6862' }}>
+                        ₩{item.price.toLocaleString()}
+                      </p>
+                      {!isDirectBuy && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQuantity(item.goodsId, item.quantity - 1)}
+                            className="w-6 h-6 border flex items-center justify-center text-xs transition-colors hover:bg-black hover:text-white"
+                            style={{ borderColor: '#E8E5E0', color: '#1C1C1C' }}
+                          >
+                            −
+                          </button>
+                          <span className="text-xs w-4 text-center" style={{ color: '#1C1C1C' }}>
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateQuantity(item.goodsId, item.quantity + 1)}
+                            className="w-6 h-6 border flex items-center justify-center text-xs transition-colors hover:bg-black hover:text-white"
+                            style={{ borderColor: '#E8E5E0', color: '#1C1C1C' }}
+                          >
+                            +
+                          </button>
+                          <button
+                            onClick={() => removeItem(item.goodsId)}
+                            className="ml-2 text-xs transition-opacity hover:opacity-60"
+                            style={{ color: '#A8A49C' }}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
             <div className="mt-6 pt-6 border-t" style={{ borderColor: '#E8E5E0' }}>
               <div className="flex justify-between items-center">
-                <span className="text-sm" style={{ color: '#6B6862' }}>합계</span>
+                <span className="text-sm" style={{ color: '#6B6862' }}>
+                  {isDirectBuy ? '합계' : `합계 (${selectedItems.length}개 선택)`}
+                </span>
                 <span className="text-base font-medium" style={{ color: '#1C1C1C' }}>
                   ₩{totalAmount.toLocaleString()}
                 </span>

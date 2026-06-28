@@ -31,10 +31,7 @@ export default function AddToCartButton({ goodsId, title, price, imageUrl }: Pro
         {added ? '담겼습니다 ✓' : '장바구니 담기'}
       </button>
       <button
-        onClick={() => {
-          addItem({ goodsId, title, price, imageUrl })
-          router.push('/checkout')
-        }}
+        onClick={() => router.push(`/checkout?goodsId=${goodsId}`)}
         className="w-full py-3 text-sm tracking-wide border transition-colors hover:bg-black hover:text-white"
         style={{ borderColor: '#1C1C1C', color: '#1C1C1C' }}
       >
