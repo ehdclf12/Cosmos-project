@@ -153,7 +153,7 @@ create policy "goods_images_admin_delete" on storage.objects
 - 찜 수 (`goods_wishlist` count)
 - 해당 상품 관련 주문 목록 (주문자, 수량, 금액, 상태, 일시)
 - "수정" 버튼 → `/admin/goods/[id]/edit`
-
+  
 ---
 
 ## 7. 고객 상품 상세 페이지 — 이미지 슬라이드쇼
