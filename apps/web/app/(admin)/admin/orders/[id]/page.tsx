@@ -19,7 +19,7 @@ export default async function OrderDetailPage({ params }: Props) {
     .select(`
       id, status, total_amount, created_at, user_id,
       recipient_name, recipient_phone, shipping_address, memo,
-      order_items(id, title, quantity, price)
+      order_items(id, title, quantity, price, status)
     `)
     .eq('id', id)
     .single()
