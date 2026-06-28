@@ -28,10 +28,21 @@ export default async function OrderDetailPage({ params }: Props) {
 
   const [{ data: authData }, { data: profileData }] = await Promise.all([
     adminClient.auth.admin.getUserById(order.user_id),
-    supabase.from('profiles').select('id, display_name').eq('id', order.user_id).single(),
+    supabase.from('profiles').select('id, display_name, phone').eq('id', order.user_id).single(),
   ])
   const authUser = authData?.user ?? null
   const profile = profileData
+
+  // 등록 휴대폰: profiles.phone 우선, 없으면 auth metadata fallback
+  const registeredPhone: string | null =
+    profile?.phone ?? (authUser?.user_metadata?.phone as string | undefined) ?? null
+
+  // 수령인 연락처와 등록 번호 비교 (하이픈 제거 후 비교)
+  const normalize = (p: string) => p.replace(/\D/g, '')
+  const phoneMismatch =
+    registeredPhone &&
+    (order as any).recipient_phone &&
+    normalize(registeredPhone) !== normalize((order as any).recipient_phone)
 
   const items = (order.order_items as { id: string; title: string; quantity: number; price: number; status: string }[]) ?? []
   const activeItems = items.filter((i) => i.status !== 'cancelled')
@@ -143,6 +154,10 @@ export default async function OrderDetailPage({ params }: Props) {
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>이메일</span>
             <span className="text-sm" style={{ color: '#1C1C1C' }}>{authUser?.email ?? '-'}</span>
           </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>등록 휴대폰</span>
+            <span className="text-sm" style={{ color: '#1C1C1C' }}>{registeredPhone ?? '-'}</span>
+          </div>
         </div>
       </section>
 
@@ -154,10 +169,27 @@ export default async function OrderDetailPage({ params }: Props) {
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>수령인명</span>
             <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).recipient_name ?? '-'}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>연락처</span>
-            <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).recipient_phone ?? '-'}</span>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-xs shrink-0" style={{ color: '#1C1C1C', opacity: 0.6 }}>연락처</span>
+            <div className="flex items-center gap-2">
+              {phoneMismatch && (
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full shrink-0"
+                  style={{ backgroundColor: '#fef3c7', color: '#d97706' }}
+                  title={`등록 번호: ${registeredPhone}`}
+                >
+                  ⚠ 등록번호 상이
+                </span>
+              )}
+              <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).recipient_phone ?? '-'}</span>
+            </div>
           </div>
+          {phoneMismatch && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>등록 번호</span>
+              <span className="text-sm" style={{ color: '#d97706' }}>{registeredPhone}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>배송지</span>
             <span className="text-sm text-right max-w-xs" style={{ color: '#1C1C1C' }}>{(order as any).shipping_address ?? '-'}</span>
