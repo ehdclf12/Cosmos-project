@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 import LandingClient from '@/app/landing/LandingClient'
 import CancelOrderButton from './_components/CancelOrderButton'
+import CancelItemButton from './_components/CancelItemButton'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -67,40 +68,85 @@ export default async function OrderDetailPage({ params }: Props) {
           <h2 className="text-xs tracking-widest uppercase mb-6" style={{ color: '#A8A49C' }}>
             주문 상품
           </h2>
-          <div className="space-y-4">
-            {order.order_items.map((item: { id: string; title: string; price: number; quantity: number; image_url: string | null }) => (
-              <div key={item.id} className="flex gap-4 items-center">
-                <div
-                  className="relative w-14 shrink-0 overflow-hidden"
-                  style={{ backgroundColor: '#E8E5E0', height: '72px' }}
-                >
-                  {item.image_url && (
-                    <Image src={item.image_url} alt={item.title} fill className="object-cover" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm mb-1" style={{ color: '#1C1C1C' }}>{item.title}</p>
-                  <p className="text-xs" style={{ color: '#6B6862' }}>
-                    ₩{item.price.toLocaleString()} × {item.quantity}
-                  </p>
-                </div>
-                <p className="text-sm font-medium" style={{ color: '#1C1C1C' }}>
-                  ₩{(item.price * item.quantity).toLocaleString()}
-                </p>
+          {(() => {
+            type OrderItem = { id: string; title: string; price: number; quantity: number; image_url: string | null; status: string }
+            const allItems: OrderItem[] = order.order_items
+            const activeItems = allItems.filter((i) => i.status !== 'cancelled')
+            const canCancelItem = ['paid', 'preparing'].includes(order.status) && activeItems.length > 0
+            return (
+              <div className="space-y-4">
+                {allItems.map((item) => {
+                  const isCancelled = item.status === 'cancelled'
+                  return (
+                    <div key={item.id} className="flex gap-4 items-center" style={{ opacity: isCancelled ? 0.45 : 1 }}>
+                      <div
+                        className="relative w-14 shrink-0 overflow-hidden"
+                        style={{ backgroundColor: '#E8E5E0', height: '72px' }}
+                      >
+                        {item.image_url && (
+                          <Image src={item.image_url} alt={item.title} fill className="object-cover" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm" style={{ color: '#1C1C1C', textDecoration: isCancelled ? 'line-through' : 'none' }}>
+                            {item.title}
+                          </p>
+                          {isCancelled && (
+                            <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#F2F1EE', color: '#A8A49C' }}>
+                              취소됨
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs" style={{ color: '#6B6862' }}>
+                          ₩{item.price.toLocaleString()} × {item.quantity}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <p className="text-sm font-medium" style={{ color: '#1C1C1C' }}>
+                          ₩{(item.price * item.quantity).toLocaleString()}
+                        </p>
+                        {canCancelItem && !isCancelled && (
+                          <CancelItemButton orderId={order.id} itemId={item.id} itemTitle={item.title} />
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-            ))}
-          </div>
+            )
+          })()}
         </section>
 
         {/* 합계 */}
-        <div className="border-t pt-4 mb-10" style={{ borderColor: '#E8E5E0' }}>
-          <div className="flex justify-between">
-            <span className="text-sm" style={{ color: '#6B6862' }}>총 결제금액</span>
-            <span className="text-base font-medium" style={{ color: '#1C1C1C' }}>
-              ₩{order.total_amount.toLocaleString()}
-            </span>
-          </div>
-        </div>
+        {(() => {
+          type OrderItem = { price: number; quantity: number; status: string }
+          const allItems: OrderItem[] = order.order_items
+          const activeTotal = allItems
+            .filter((i) => i.status !== 'cancelled')
+            .reduce((sum, i) => sum + i.price * i.quantity, 0)
+          const hasPartialCancel = activeTotal !== order.total_amount && order.status !== 'cancelled'
+          return (
+            <div className="border-t pt-4 mb-10" style={{ borderColor: '#E8E5E0' }}>
+              {hasPartialCancel && (
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs line-through" style={{ color: '#A8A49C' }}>원 결제금액</span>
+                  <span className="text-xs line-through" style={{ color: '#A8A49C' }}>
+                    ₩{order.total_amount.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-sm" style={{ color: '#6B6862' }}>
+                  {hasPartialCancel ? '실 결제금액' : '총 결제금액'}
+                </span>
+                <span className="text-base font-medium" style={{ color: '#1C1C1C' }}>
+                  ₩{(hasPartialCancel ? activeTotal : order.total_amount).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* 배송지 */}
         <section className="mb-10 p-5 rounded-xl" style={{ backgroundColor: '#E8E5E0' }}>
@@ -133,8 +179,9 @@ export default async function OrderDetailPage({ params }: Props) {
           </Link>
         </div>
 
-        {/* 취소 버튼 — paid/preparing 상태일 때만 표시 */}
-        {['paid', 'preparing'].includes(order.status) && (
+        {/* 전체 주문 취소 버튼 — paid/preparing이고 active 아이템이 있을 때만 */}
+        {['paid', 'preparing'].includes(order.status) &&
+          order.order_items.some((i: { status: string }) => i.status !== 'cancelled') && (
           <div className="mt-4">
             <CancelOrderButton orderId={order.id} />
           </div>
