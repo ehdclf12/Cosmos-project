@@ -43,14 +43,15 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   let query = supabase
     .from('orders')
     .select(
-      'id, status, total_amount, created_at, user_id, order_items(title, quantity)',
+      'id, status, total_amount, created_at, user_id, recipient_name, order_items(title, quantity)',
       { count: 'exact' }
     )
 
   if (qSafe) {
     const idFilter = `id.ilike.%${qSafe}%`
+    const recipientFilter = `,recipient_name.ilike.%${qSafe}%`
     const nameFilter = profileIds.length > 0 ? `,user_id.in.(${profileIds.join(',')})` : ''
-    query = query.or(idFilter + nameFilter)
+    query = query.or(idFilter + recipientFilter + nameFilter)
   }
   if (statusFilter) query = query.eq('status', statusFilter)
   if (dateFrom) query = query.gte('created_at', dateFrom)
@@ -143,7 +144,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                   </Link>
                 </td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
-                  {profileMap[order.user_id] ?? '-'}
+                  {(order as any).recipient_name ?? profileMap[order.user_id] ?? '-'}
                 </td>
                 <td className="py-3 max-w-xs truncate" style={{ color: '#1C1C1C' }}>{itemLabel || '-'}</td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>{(order.total_amount ?? 0).toLocaleString()}원</td>

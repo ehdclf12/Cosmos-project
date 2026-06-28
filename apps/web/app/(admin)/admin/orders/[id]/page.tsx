@@ -18,6 +18,7 @@ export default async function OrderDetailPage({ params }: Props) {
     .from('orders')
     .select(`
       id, status, total_amount, created_at, user_id,
+      recipient_name, recipient_phone, shipping_address, memo,
       order_items(id, title, quantity, price)
     `)
     .eq('id', id)
@@ -95,19 +96,33 @@ export default async function OrderDetailPage({ params }: Props) {
         <h2 className="text-sm font-medium mb-3" style={{ color: '#1C1C1C' }}>주문자 정보</h2>
         <div className="rounded-2xl p-5 space-y-2" style={{ backgroundColor: '#E8E5E0' }}>
           <div className="flex items-center justify-between">
-            <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>이름</span>
+            <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>주문자명</span>
             <Link
               href={`/admin/customers/${profile?.id}`}
               className="text-sm hover:underline"
               style={{ color: '#1C1C1C' }}
             >
-              {profile?.display_name ?? '-'}
+              {(order as any).recipient_name ?? '-'}
             </Link>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>이메일</span>
             <span className="text-sm" style={{ color: '#1C1C1C' }}>{authUser?.email ?? '-'}</span>
           </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>연락처</span>
+            <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).recipient_phone ?? '-'}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>배송지</span>
+            <span className="text-sm text-right max-w-xs" style={{ color: '#1C1C1C' }}>{(order as any).shipping_address ?? '-'}</span>
+          </div>
+          {(order as any).memo && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>메모</span>
+              <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).memo}</span>
+            </div>
+          )}
         </div>
       </section>
     </div>
