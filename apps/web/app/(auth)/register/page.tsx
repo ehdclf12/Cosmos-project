@@ -1,13 +1,14 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export default function RegisterPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [nickname, setNickname] = useState('')
+  const [nicknameTaken, setNicknameTaken] = useState(false)
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -17,16 +18,42 @@ export default function RegisterPage() {
 
   const SPECIAL_CHAR = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/
 
+  async function checkNickname(value: string) {
+    setNicknameTaken(false)
+    if (!value.trim()) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('nickname', value.trim())
+      .maybeSingle()
+    if (data) setNicknameTaken(true)
+  }
+
   async function handleRegister() {
     setError('')
     if (!nickname.trim()) { setError('닉네임을 입력해주세요.'); return }
-    if (!phone.trim()) { setError('휴대폰 번호를 입력해주세요.'); return }
+    if (nicknameTaken) { setError('이미 사용 중인 닉네임입니다.'); return }
     if (password.length < 10) { setError('비밀번호는 10자 이상이어야 합니다.'); return }
     if (!SPECIAL_CHAR.test(password)) { setError('비밀번호에 특수문자(!@#$ 등)를 포함해주세요.'); return }
     if (password !== confirm) { setError('비밀번호가 일치하지 않습니다.'); return }
 
     setLoading(true)
     const supabase = createClient()
+
+    // 제출 시 한 번 더 중복 확인
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('nickname', nickname.trim())
+      .maybeSingle()
+    if (existing) {
+      setNicknameTaken(true)
+      setError('이미 사용 중인 닉네임입니다.')
+      setLoading(false)
+      return
+    }
+
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -90,10 +117,20 @@ export default function RegisterPage() {
           </div>
           <div>
             <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>닉네임</label>
-            <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} className={inputClass} placeholder="사용할 닉네임" />
+            <input
+              type="text"
+              value={nickname}
+              onChange={(e) => { setNickname(e.target.value); setNicknameTaken(false) }}
+              onBlur={(e) => checkNickname(e.target.value)}
+              className={inputClass + (nicknameTaken ? ' border-red-400' : '')}
+              placeholder="사용할 닉네임"
+            />
+            {nicknameTaken && (
+              <p className="mt-1 text-xs text-red-400">이미 사용 중인 닉네임입니다.</p>
+            )}
           </div>
           <div>
-            <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>휴대폰 번호</label>
+            <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>휴대폰 번호 (선택)</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} placeholder="010-0000-0000" />
           </div>
           <div>
@@ -108,7 +145,7 @@ export default function RegisterPage() {
 
         {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
 
-        <button onClick={handleRegister} disabled={loading}
+        <button onClick={handleRegister} disabled={loading || nicknameTaken}
           className="w-full mt-6 py-3 rounded-lg text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ backgroundColor: '#1C1C1C' }}>
           {loading ? '가입 중...' : '가입하기'}
