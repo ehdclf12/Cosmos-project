@@ -205,7 +205,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>수령인명</label>
+                <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>수령인명 <span style={{ color: '#dc2626' }}>*</span></label>
                 <input
                   type="text"
                   value={recipientName}
@@ -215,7 +215,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>연락처</label>
+                <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>연락처 <span style={{ color: '#dc2626' }}>*</span></label>
                 <input
                   type="tel"
                   value={recipientPhone}
@@ -225,7 +225,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
                 />
               </div>
               <div>
-                <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>배송지</label>
+                <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>배송지 <span style={{ color: '#dc2626' }}>*</span></label>
                 <AddressSearchInput
                   zonecode={zonecode}
                   baseAddress={baseAddress}
