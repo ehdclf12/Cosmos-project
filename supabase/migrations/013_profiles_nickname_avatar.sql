@@ -1,8 +1,4 @@
--- profiles에 nickname 컬럼 추가 (nullable로 먼저 추가)
-ALTER TABLE public.profiles
-  ADD COLUMN IF NOT EXISTS nickname text;
-
--- 기존 데이터 백필: auth.users의 메타데이터에서 nickname 채우기
+-- 기존 데이터 백필: nickname이 NULL인 경우 메타데이터에서 채우기
 UPDATE public.profiles p
 SET
   nickname = COALESCE(
@@ -17,11 +13,11 @@ SET
 FROM auth.users u
 WHERE p.id = u.id;
 
--- 백필 후 NOT NULL 제약 추가
+-- nickname NOT NULL 제약 추가
 ALTER TABLE public.profiles
   ALTER COLUMN nickname SET NOT NULL;
 
--- 신규 가입/OAuth 모두 nickname, avatar_url 채우도록 트리거 업데이트
+-- 트리거 업데이트: 이메일/카카오 모두 nickname, avatar_url 채우기
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
