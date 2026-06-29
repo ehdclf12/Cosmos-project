@@ -11,6 +11,14 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  async function handleKakaoLogin() {
+    const supabase = createClient()
+    await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: `${location.origin}/auth/callback` },
+    })
+  }
+
   async function handleLogin() {
     setError('')
     setLoading(true)
@@ -82,15 +90,13 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-4 space-y-3">
-          {['구글로 계속하기', '카카오로 계속하기', 'Apple로 계속하기'].map((label) => (
-            <button
-              key={label}
-              className="w-full py-3 rounded-lg text-sm border border-gray-200 hover:bg-gray-50 transition-colors"
-              style={{ color: '#1C1C1C' }}
-            >
-              {label}
-            </button>
-          ))}
+          <button
+            onClick={handleKakaoLogin}
+            className="w-full py-3 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
+            style={{ backgroundColor: '#FEE500', color: '#191919' }}
+          >
+            카카오로 계속하기
+          </button>
         </div>
       </div>
 
