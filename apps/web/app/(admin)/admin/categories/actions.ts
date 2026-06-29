@@ -12,9 +12,18 @@ export async function addCategory(name: string) {
   return {}
 }
 
-export async function deleteCategory(id: string) {
+export async function deactivateCategory(id: string) {
   const supabase = await createClient()
-  await supabase.from('categories').delete().eq('id', id)
+  await supabase.from('categories').update({ is_active: false }).eq('id', id)
   revalidatePath('/admin/categories')
   revalidatePath('/admin/goods')
+  revalidatePath('/goods')
+}
+
+export async function activateCategory(id: string) {
+  const supabase = await createClient()
+  await supabase.from('categories').update({ is_active: true }).eq('id', id)
+  revalidatePath('/admin/categories')
+  revalidatePath('/admin/goods')
+  revalidatePath('/goods')
 }

@@ -14,11 +14,20 @@ export default async function GoodsPage({ searchParams }: Props) {
   const { category } = await searchParams
   const supabase = await createClient()
 
+  // 활성 카테고리만 노출
   const { data: categoriesData } = await supabase
     .from('categories')
     .select('id, name, slug')
+    .eq('is_active', true)
     .order('name')
   const categories = categoriesData ?? []
+
+  // 비활성 카테고리 ID 목록 (해당 상품 숨김용)
+  const { data: inactiveCats } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('is_active', false)
+  const inactiveCatIds = (inactiveCats ?? []).map((c) => c.id)
 
   const now = new Date().toISOString()
 
@@ -28,6 +37,11 @@ export default async function GoodsPage({ searchParams }: Props) {
     .or(`published_at.is.null,published_at.lte.${now}`)
     .neq('status', 'draft')
     .order('created_at', { ascending: false })
+
+  // 비활성 카테고리 상품 제외
+  if (inactiveCatIds.length > 0) {
+    query = query.not('category_id', 'in', `(${inactiveCatIds.join(',')})`)
+  }
 
   if (category) {
     const cat = categories.find((c) => c.slug === category)

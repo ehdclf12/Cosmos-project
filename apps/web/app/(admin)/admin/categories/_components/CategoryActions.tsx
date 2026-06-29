@@ -1,13 +1,16 @@
 'use client'
 import { useState, useTransition } from 'react'
-import { addCategory, deleteCategory } from '../actions'
+import { addCategory, activateCategory, deactivateCategory } from '../actions'
 
-interface Category { id: string; name: string }
+interface Category { id: string; name: string; is_active: boolean }
 
 export default function CategoryActions({ categories }: { categories: Category[] }) {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  const active = categories.filter((c) => c.is_active)
+  const inactive = categories.filter((c) => !c.is_active)
 
   function handleAdd() {
     setError('')
@@ -19,9 +22,13 @@ export default function CategoryActions({ categories }: { categories: Category[]
     })
   }
 
-  function handleDelete(id: string, catName: string) {
-    if (!confirm(`'${catName}' 카테고리를 삭제하시겠습니까?\n해당 카테고리의 상품들은 카테고리 없음으로 변경됩니다.`)) return
-    startTransition(() => deleteCategory(id))
+  function handleDeactivate(id: string, catName: string) {
+    if (!confirm(`'${catName}' 카테고리를 비활성화하시겠습니까?\n해당 카테고리의 상품이 공개 페이지에서 숨겨집니다.`)) return
+    startTransition(() => deactivateCategory(id))
+  }
+
+  function handleActivate(id: string) {
+    startTransition(() => activateCategory(id))
   }
 
   return (
@@ -50,29 +57,54 @@ export default function CategoryActions({ categories }: { categories: Category[]
         {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
       </div>
 
-      {/* 카테고리 목록 */}
-      <div className="space-y-2">
-        {categories.length === 0 && (
-          <p className="text-sm text-center py-8" style={{ color: '#A8A49C' }}>등록된 카테고리가 없습니다.</p>
+      {/* 활성 카테고리 */}
+      <p className="text-xs mb-2" style={{ color: '#6B6862' }}>활성 카테고리</p>
+      <div className="space-y-2 mb-6">
+        {active.length === 0 && (
+          <p className="text-sm text-center py-6" style={{ color: '#A8A49C' }}>활성 카테고리가 없습니다.</p>
         )}
-        {categories.map((c) => (
-          <div
-            key={c.id}
-            className="flex items-center justify-between px-4 py-3 rounded-xl"
-            style={{ backgroundColor: '#F2F1EE' }}
-          >
-            <span className="text-sm" style={{ color: '#1C1C1C' }}>{c.name}</span>
+        {active.map((c) => (
+          <div key={c.id} className="flex items-center justify-between px-4 py-3 rounded-xl" style={{ backgroundColor: '#F2F1EE' }}>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#22c55e' }} />
+              <span className="text-sm" style={{ color: '#1C1C1C' }}>{c.name}</span>
+            </div>
             <button
-              onClick={() => handleDelete(c.id, c.name)}
+              onClick={() => handleDeactivate(c.id, c.name)}
               disabled={isPending}
               className="px-3 py-1 rounded-lg text-xs transition-opacity hover:opacity-70 disabled:opacity-40"
               style={{ backgroundColor: '#FEE2E2', color: '#991B1B' }}
             >
-              삭제
+              비활성화
             </button>
           </div>
         ))}
       </div>
+
+      {/* 비활성 카테고리 */}
+      {inactive.length > 0 && (
+        <>
+          <p className="text-xs mb-2" style={{ color: '#6B6862' }}>비활성 카테고리 (공개 숨김 중)</p>
+          <div className="space-y-2">
+            {inactive.map((c) => (
+              <div key={c.id} className="flex items-center justify-between px-4 py-3 rounded-xl" style={{ backgroundColor: '#F2F1EE', opacity: 0.6 }}>
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#A8A49C' }} />
+                  <span className="text-sm" style={{ color: '#6B6862' }}>{c.name}</span>
+                </div>
+                <button
+                  onClick={() => handleActivate(c.id)}
+                  disabled={isPending}
+                  className="px-3 py-1 rounded-lg text-xs transition-opacity hover:opacity-70 disabled:opacity-40"
+                  style={{ backgroundColor: '#DCFCE7', color: '#166534' }}
+                >
+                  활성화
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
