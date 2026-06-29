@@ -24,11 +24,17 @@ export default function CategoryActions({ categories }: { categories: Category[]
 
   function handleDeactivate(id: string, catName: string) {
     if (!confirm(`'${catName}' 카테고리를 비활성화하시겠습니까?\n해당 카테고리의 상품이 공개 페이지에서 숨겨집니다.`)) return
-    startTransition(() => deactivateCategory(id))
+    startTransition(async () => {
+      const result = await deactivateCategory(id)
+      if (result?.error) setError(result.error)
+    })
   }
 
   function handleActivate(id: string) {
-    startTransition(() => activateCategory(id))
+    startTransition(async () => {
+      const result = await activateCategory(id)
+      if (result?.error) setError(result.error)
+    })
   }
 
   return (
