@@ -8,43 +8,45 @@ export const metadata: Metadata = { title: '상품 관리 — Cosmos Admin' }
 
 const PAGE_SIZE = 20
 
-const STATUS_LABEL: Record<string, string> = {
-  active: '판매중',
-  sold_out: '품절',
-  draft: '임시저장',
+const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }> = {
+  active:   { label: '판매중',   bg: '#DCFCE7', color: '#166534' },
+  sold_out: { label: '품절',     bg: '#FEE2E2', color: '#991B1B' },
+  draft:    { label: '임시저장', bg: '#FEF9C3', color: '#854D0E' },
 }
 
 interface Props {
-  searchParams: Promise<{ q?: string; status?: string; from?: string; to?: string; page?: string }>
+  searchParams: Promise<{ q?: string; status?: string; category?: string; from?: string; to?: string; page?: string }>
 }
 
 export default async function AdminGoodsPage({ searchParams }: Props) {
   const sp = await searchParams
   const q = sp.q ?? ''
   const statusFilter = sp.status ?? ''
+  const categoryFilter = sp.category ?? ''
   const dateFrom = sp.from ?? ''
   const dateTo = sp.to ?? ''
   const page = Math.max(1, Number(sp.page) || 1)
   const supabase = await createClient()
 
-  // 미니 대시보드 데이터
   const [
     { count: totalGoods },
     { count: activeGoods },
     { count: paidOrders },
+    { data: categories },
   ] = await Promise.all([
     supabase.from('goods').select('*', { count: 'exact', head: true }),
     supabase.from('goods').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'paid'),
+    supabase.from('categories').select('id, name').order('name'),
   ])
 
-  // 필터링된 상품 목록
   let query = supabase
     .from('goods')
-    .select('id, title, price, discount_rate, stock_quantity, status, images, categories(name)', { count: 'exact' })
+    .select('id, title, price, discount_rate, stock_quantity, status, images, category_id, categories(name)', { count: 'exact' })
 
   if (q) query = query.ilike('title', `%${q}%`)
   if (statusFilter) query = query.eq('status', statusFilter)
+  if (categoryFilter) query = query.eq('category_id', categoryFilter)
   if (dateFrom) query = query.gte('created_at', dateFrom)
   if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59')
 
@@ -56,8 +58,11 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
   const spRecord: Record<string, string> = {}
   if (q) spRecord.q = q
   if (statusFilter) spRecord.status = statusFilter
+  if (categoryFilter) spRecord.category = categoryFilter
   if (dateFrom) spRecord.from = dateFrom
   if (dateTo) spRecord.to = dateTo
+
+  const hasFilter = q || statusFilter || categoryFilter || dateFrom || dateTo
 
   return (
     <div>
@@ -77,6 +82,13 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
 
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-light" style={{ color: '#1C1C1C' }}>상품 관리</h1>
+        <Link
+          href="/admin/categories"
+          className="text-xs px-3 py-1.5 rounded-lg border transition-colors hover:bg-gray-50"
+          style={{ borderColor: '#E8E5E0', color: '#6B6862' }}
+        >
+          카테고리 관리
+        </Link>
       </div>
 
       {/* 검색/필터 폼 */}
@@ -89,6 +101,17 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
           style={{ color: '#1C1C1C', minWidth: 180 }}
         />
         <select
+          name="category"
+          defaultValue={categoryFilter}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none"
+          style={{ color: '#1C1C1C' }}
+        >
+          <option value="">전체 카테고리</option>
+          {(categories ?? []).map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        <select
           name="status"
           defaultValue={statusFilter}
           className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none"
@@ -99,42 +122,20 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
           <option value="sold_out">품절</option>
           <option value="draft">임시저장</option>
         </select>
-        <input
-          type="date"
-          name="from"
-          defaultValue={dateFrom}
-          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none"
-          style={{ color: '#1C1C1C' }}
-        />
+        <input type="date" name="from" defaultValue={dateFrom}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none" style={{ color: '#1C1C1C' }} />
         <span className="self-center text-sm" style={{ color: '#1C1C1C' }}>~</span>
-        <input
-          type="date"
-          name="to"
-          defaultValue={dateTo}
-          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none"
-          style={{ color: '#1C1C1C' }}
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-xl text-sm text-white"
-          style={{ backgroundColor: '#1C1C1C' }}
-        >
+        <input type="date" name="to" defaultValue={dateTo}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none" style={{ color: '#1C1C1C' }} />
+        <button type="submit" className="px-4 py-2 rounded-xl text-sm text-white" style={{ backgroundColor: '#1C1C1C' }}>
           검색
         </button>
-        {(q || statusFilter || dateFrom || dateTo) && (
-          <a
-            href="/admin/goods"
-            className="px-4 py-2 rounded-xl text-sm border border-gray-200"
-            style={{ color: '#1C1C1C' }}
-          >
+        {hasFilter && (
+          <a href="/admin/goods" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
             초기화
           </a>
         )}
-        <Link
-          href="/admin/goods/new"
-          className="ml-auto px-4 py-2 rounded-xl text-sm text-white"
-          style={{ backgroundColor: '#1C1C1C' }}
-        >
+        <Link href="/admin/goods/new" className="ml-auto px-4 py-2 rounded-xl text-sm text-white" style={{ backgroundColor: '#1C1C1C' }}>
           + 상품 등록
         </Link>
       </form>
@@ -142,21 +143,22 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
       {/* 상품 목록 테이블 */}
       <table className="w-full text-sm">
         <thead>
-          <tr className="text-left" style={{ color: '#1C1C1C' }}>
-            <th className="pb-2 font-normal w-12">이미지</th>
-            <th className="pb-2 font-normal">상품명</th>
-            <th className="pb-2 font-normal">가격</th>
-            <th className="pb-2 font-normal">할인</th>
-            <th className="pb-2 font-normal">재고</th>
-            <th className="pb-2 font-normal">카테고리</th>
-            <th className="pb-2 font-normal">상태</th>
-            <th className="pb-2 font-normal w-20"></th>
+          <tr className="text-left" style={{ color: '#6B6862' }}>
+            <th className="pb-3 font-normal w-12">이미지</th>
+            <th className="pb-3 font-normal">상품명</th>
+            <th className="pb-3 font-normal">가격</th>
+            <th className="pb-3 font-normal">할인</th>
+            <th className="pb-3 font-normal">재고</th>
+            <th className="pb-3 font-normal">카테고리</th>
+            <th className="pb-3 font-normal">상태</th>
+            <th className="pb-3 font-normal w-28"></th>
           </tr>
         </thead>
         <tbody>
           {(goods ?? []).map((item) => {
             const finalPrice = Math.round(item.price * (1 - (item.discount_rate ?? 0) / 100))
             const stockQty = (item as any).stock_quantity ?? 0
+            const status = STATUS_STYLE[item.status] ?? { label: item.status, bg: '#E8E5E0', color: '#1C1C1C' }
             return (
               <tr key={item.id} style={{ borderTop: '1px solid #E8E5E0' }}>
                 <td className="py-3">
@@ -174,7 +176,7 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
                   {finalPrice.toLocaleString()}원
                   {(item.discount_rate ?? 0) > 0 && (
-                    <span className="ml-1 text-xs" style={{ color: '#1C1C1C', opacity: 0.5 }}>
+                    <span className="ml-1 text-xs" style={{ color: '#A8A49C' }}>
                       ({item.price.toLocaleString()}원)
                     </span>
                   )}
@@ -182,23 +184,27 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
                   {(item.discount_rate ?? 0) > 0 ? `${item.discount_rate}%` : '-'}
                 </td>
-                <td className="py-3" style={{ color: stockQty === 0 ? '#ef4444' : '#1C1C1C' }}>
+                <td className="py-3 font-medium" style={{ color: stockQty === 0 ? '#ef4444' : '#1C1C1C' }}>
                   {stockQty}
                 </td>
-                <td className="py-3" style={{ color: '#1C1C1C' }}>
+                <td className="py-3 text-xs" style={{ color: '#6B6862' }}>
                   {(item.categories as any)?.name ?? '-'}
                 </td>
                 <td className="py-3">
                   <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: '#E8E5E0', color: '#1C1C1C' }}
+                    className="text-xs px-2 py-1 rounded-full font-medium"
+                    style={{ backgroundColor: status.bg, color: status.color }}
                   >
-                    {STATUS_LABEL[item.status] ?? item.status}
+                    {status.label}
                   </span>
                 </td>
                 <td className="py-3">
-                  <div className="flex gap-3">
-                    <Link href={`/admin/goods/${item.id}/edit`} className="text-xs hover:opacity-70" style={{ color: '#1C1C1C' }}>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/admin/goods/${item.id}/edit`}
+                      className="px-3 py-1 rounded-lg text-xs border transition-colors hover:bg-gray-50"
+                      style={{ borderColor: '#1C1C1C', color: '#1C1C1C' }}
+                    >
                       수정
                     </Link>
                     <DeleteGoodsButton id={item.id} />
@@ -209,8 +215,8 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
           })}
           {(goods ?? []).length === 0 && (
             <tr>
-              <td colSpan={8} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>
-                {q || statusFilter || dateFrom || dateTo ? '검색 결과가 없습니다.' : '등록된 상품이 없습니다.'}
+              <td colSpan={8} className="py-12 text-center text-sm" style={{ color: '#A8A49C' }}>
+                {hasFilter ? '검색 결과가 없습니다.' : '등록된 상품이 없습니다.'}
               </td>
             </tr>
           )}
