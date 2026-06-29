@@ -121,7 +121,8 @@
       "Bash(/Users/cosmos/Desktop/Cosmos/apps/web/node_modules/.bin/tsc --noEmit)",
       "Bash(echo \"Task 8: complete \\(commits eec4c86..$\\(git -C /Users/cosmos/Desktop/Cosmos rev-parse --short HEAD\\), review pending\\)\")",
       "Bash(/usr/local/bin/npx tsc *)",
-      "Bash(/Users/cosmos/.local/node/bin/npx tsc *)"
+      "Bash(/Users/cosmos/.local/node/bin/npx tsc *)",
+      "Bash(pnpm --filter web tsc --noEmit)"
     ]
   }
 }

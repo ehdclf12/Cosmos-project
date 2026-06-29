@@ -59,7 +59,6 @@ export default function CheckoutForm({ userId, directItem }: Props) {
   }, [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   // 장바구니가 비었을 때만 리다이렉트 (직접 구매 모드는 제외)
   useEffect(() => {
@@ -86,20 +85,13 @@ export default function CheckoutForm({ userId, directItem }: Props) {
     }
   }
 
-  // 1단계: 유효성 검사 후 결제 안내 모달 노출
-  function handleOrderClick() {
+  async function handleOrder() {
     setError('')
     if (!recipientName.trim()) { setError('수령인명을 입력해주세요.'); return }
     if (!recipientPhone.trim()) { setError('연락처를 입력해주세요.'); return }
     if (!zonecode || !baseAddress) { setError('주소검색으로 기본 주소를 입력해주세요.'); return }
     if (!detailAddress.trim()) { setError('나머지 주소(동/호수 등)를 입력해주세요.'); return }
     if (selectedItems.length === 0) { setError('주문할 상품을 선택해주세요.'); return }
-    setShowPaymentModal(true)
-  }
-
-  // 2단계: 모달 확인 후 실제 주문 처리
-  async function handleOrder() {
-    setShowPaymentModal(false)
     setLoading(true)
     const supabase = createClient()
 
@@ -158,64 +150,6 @@ export default function CheckoutForm({ userId, directItem }: Props) {
   if (!isDirectBuy && cartItems.length === 0) return null
 
   return (
-    <>
-    {/* 무통장입금 안내 모달 */}
-    {showPaymentModal && (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center"
-        style={{ backgroundColor: 'rgba(0,0,0,0.45)' }}
-        onClick={() => setShowPaymentModal(false)}
-      >
-        <div
-          className="w-full max-w-sm mx-4 rounded-2xl p-8"
-          style={{ backgroundColor: '#F2F1EE' }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <p className="text-xs tracking-widest uppercase mb-1" style={{ color: '#A8A49C' }}>Payment</p>
-          <h2 className="text-lg font-light mb-6" style={{ color: '#1C1C1C' }}>무통장입금 안내</h2>
-
-          <div className="space-y-3 mb-6 p-5 rounded-xl" style={{ backgroundColor: '#E8E5E0' }}>
-            <div className="flex justify-between">
-              <span className="text-xs" style={{ color: '#6B6862' }}>은행</span>
-              <span className="text-sm font-medium" style={{ color: '#1C1C1C' }}>토스뱅크</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs" style={{ color: '#6B6862' }}>예금주명</span>
-              <span className="text-sm font-medium" style={{ color: '#1C1C1C' }}>강도영</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-xs" style={{ color: '#6B6862' }}>계좌번호</span>
-              <span className="text-sm font-medium" style={{ color: '#1C1C1C' }}>1000-6570-6934</span>
-            </div>
-            <div className="flex justify-between pt-2 border-t" style={{ borderColor: 'rgba(28,28,28,0.15)' }}>
-              <span className="text-xs" style={{ color: '#6B6862' }}>입금 금액</span>
-              <span className="text-sm font-medium" style={{ color: '#1C1C1C' }}>₩{totalAmount.toLocaleString()}</span>
-            </div>
-          </div>
-
-          <p className="text-xs mb-6 text-center" style={{ color: '#A8A49C' }}>
-            입금 확인 후 주문이 처리됩니다.
-          </p>
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowPaymentModal(false)}
-              className="flex-1 py-3 text-sm border transition-colors hover:bg-black hover:text-white"
-              style={{ borderColor: '#1C1C1C', color: '#1C1C1C' }}
-            >
-              취소
-            </button>
-            <button
-              onClick={handleOrder}
-              className="flex-1 py-3 text-sm text-white transition-opacity hover:opacity-80"
-              style={{ backgroundColor: '#1C1C1C' }}
-            >
-              주문 완료
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
     <div style={{ backgroundColor: '#F2F1EE', minHeight: '100vh' }}>
       <main className="pt-20 px-6 md:px-12 pb-20 max-w-4xl mx-auto">
         <div className="py-10 border-b mb-10" style={{ borderColor: '#E8E5E0' }}>
@@ -276,7 +210,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
             {error && <p className="mt-4 text-xs text-red-400">{error}</p>}
 
             <button
-              onClick={handleOrderClick}
+              onClick={handleOrder}
               disabled={loading || selectedItems.length === 0}
               className="w-full mt-8 py-4 text-sm tracking-wide text-white transition-opacity hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: '#1C1C1C' }}
@@ -385,6 +319,5 @@ export default function CheckoutForm({ userId, directItem }: Props) {
         </div>
       </main>
     </div>
-    </>
   )
 }
