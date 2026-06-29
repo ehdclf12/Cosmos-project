@@ -15,7 +15,10 @@ export default function LoginPage() {
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${location.origin}/auth/callback`,
+        scopes: 'profile_nickname profile_image',
+      },
     })
   }
 
