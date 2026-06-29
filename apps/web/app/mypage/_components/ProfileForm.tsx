@@ -1,23 +1,42 @@
 'use client'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import AddressSearchInput from '@/app/checkout/_components/AddressSearchInput'
 
 interface Props {
   userId: string
   initialNickname: string
   initialPhone: string
+  initialZonecode: string
+  initialBaseAddress: string
+  initialDetailAddress: string
 }
 
-export default function ProfileForm({ userId, initialNickname, initialPhone }: Props) {
+export default function ProfileForm({
+  userId,
+  initialNickname,
+  initialPhone,
+  initialZonecode,
+  initialBaseAddress,
+  initialDetailAddress,
+}: Props) {
   const router = useRouter()
   const [nickname, setNickname] = useState(initialNickname)
   const [phone, setPhone] = useState(initialPhone)
+  const [zonecode, setZonecode] = useState(initialZonecode)
+  const [baseAddress, setBaseAddress] = useState(initialBaseAddress)
+  const [detailAddress, setDetailAddress] = useState(initialDetailAddress)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
   const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-3 text-sm text-black outline-none focus:border-gray-400 transition-colors"
+
+  const handleAddressSelect = useCallback((zc: string, addr: string) => {
+    setZonecode(zc)
+    setBaseAddress(addr)
+  }, [])
 
   async function handleSave() {
     setError('')
@@ -29,7 +48,15 @@ export default function ProfileForm({ userId, initialNickname, initialPhone }: P
     const supabase = createClient()
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ nickname: nickname.trim(), phone: phone.trim(), username: nickname.trim(), display_name: nickname.trim() })
+      .update({
+        nickname: nickname.trim(),
+        phone: phone.trim(),
+        username: nickname.trim(),
+        display_name: nickname.trim(),
+        default_zonecode: zonecode || null,
+        default_base_address: baseAddress || null,
+        default_detail_address: detailAddress.trim() || null,
+      })
       .eq('id', userId)
     setLoading(false)
 
@@ -52,6 +79,17 @@ export default function ProfileForm({ userId, initialNickname, initialPhone }: P
         <div>
           <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>휴대폰 번호</label>
           <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} placeholder="010-0000-0000" />
+        </div>
+        <div>
+          <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>기본 배송지</label>
+          <AddressSearchInput
+            zonecode={zonecode}
+            baseAddress={baseAddress}
+            detailAddress={detailAddress}
+            onAddressSelect={handleAddressSelect}
+            onDetailChange={setDetailAddress}
+            inputClass={inputClass}
+          />
         </div>
       </div>
       {error && <p className="mt-3 text-xs text-red-400">{error}</p>}

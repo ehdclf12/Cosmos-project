@@ -52,6 +52,9 @@ export default function CheckoutForm({ userId, directItem }: Props) {
   const [baseAddress, setBaseAddress] = useState('')
   const [detailAddress, setDetailAddress] = useState('')
   const [memo, setMemo] = useState('')
+  const [defaultAddress, setDefaultAddress] = useState<{
+    zonecode: string; baseAddress: string; detailAddress: string
+  } | null>(null)
 
   const handleAddressSelect = useCallback((zc: string, addr: string) => {
     setZonecode(zc)
@@ -59,6 +62,26 @@ export default function CheckoutForm({ userId, directItem }: Props) {
   }, [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase
+      .from('profiles')
+      .select('default_zonecode, default_base_address, default_detail_address, phone')
+      .eq('id', userId)
+      .single()
+      .then(({ data }) => {
+        if (data?.default_zonecode && data?.default_base_address) {
+          setDefaultAddress({
+            zonecode: data.default_zonecode,
+            baseAddress: data.default_base_address,
+            detailAddress: data.default_detail_address ?? '',
+          })
+        }
+        if (data?.phone && !recipientPhone) setRecipientPhone(data.phone)
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // 장바구니가 비었을 때만 리다이렉트 (직접 구매 모드는 제외)
   useEffect(() => {
@@ -160,9 +183,25 @@ export default function CheckoutForm({ userId, directItem }: Props) {
         <div className="flex flex-col md:flex-row gap-12">
           {/* 좌: 주문 폼 */}
           <div className="flex-1">
-            <h2 className="text-sm tracking-widest uppercase mb-6" style={{ color: '#6B6862' }}>
-              배송 정보
-            </h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-sm tracking-widest uppercase" style={{ color: '#6B6862' }}>
+                배송 정보
+              </h2>
+              {defaultAddress && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setZonecode(defaultAddress.zonecode)
+                    setBaseAddress(defaultAddress.baseAddress)
+                    setDetailAddress(defaultAddress.detailAddress)
+                  }}
+                  className="text-xs underline transition-opacity hover:opacity-60"
+                  style={{ color: '#1C1C1C' }}
+                >
+                  기본배송지 불러오기
+                </button>
+              )}
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-xs mb-1.5" style={{ color: '#A8A49C' }}>수령인명</label>

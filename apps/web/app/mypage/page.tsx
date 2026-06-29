@@ -9,7 +9,7 @@ export default async function MypagePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('nickname, phone')
+    .select('nickname, phone, default_zonecode, default_base_address, default_detail_address')
     .eq('id', user.id)
     .single()
 
@@ -18,6 +18,9 @@ export default async function MypagePage() {
       userId={user.id}
       initialNickname={profile?.nickname ?? ''}
       initialPhone={profile?.phone ?? ''}
+      initialZonecode={profile?.default_zonecode ?? ''}
+      initialBaseAddress={profile?.default_base_address ?? ''}
+      initialDetailAddress={profile?.default_detail_address ?? ''}
     />
   )
 }
