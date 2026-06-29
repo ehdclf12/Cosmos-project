@@ -67,7 +67,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
     const supabase = createClient()
     supabase
       .from('profiles')
-      .select('default_zonecode, default_base_address, default_detail_address, phone')
+      .select('default_zonecode, default_base_address, default_detail_address, phone, nickname')
       .eq('id', userId)
       .single()
       .then(({ data }) => {
@@ -78,7 +78,8 @@ export default function CheckoutForm({ userId, directItem }: Props) {
             detailAddress: data.default_detail_address ?? '',
           })
         }
-        if (data?.phone && !recipientPhone) setRecipientPhone(data.phone)
+        if (data?.nickname) setRecipientName(data.nickname)
+        if (data?.phone) setRecipientPhone(data.phone)
       })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
