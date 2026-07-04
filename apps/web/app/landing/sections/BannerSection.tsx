@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import type { BannerContent } from '../content'
+import type { BannerContent } from '@cosmos/shared'
 
 interface Props {
   content: BannerContent

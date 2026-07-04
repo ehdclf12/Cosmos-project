@@ -4,19 +4,35 @@ import HeroSection from './landing/sections/HeroSection'
 import EditorialSection from './landing/sections/EditorialSection'
 import GridSection from './landing/sections/GridSection'
 import BannerSection from './landing/sections/BannerSection'
-import { landingContent } from './landing/content'
+import { getPublishedLandingContent, getDraftLandingContent } from '@/lib/landing-content'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
-export default function RootPage() {
+export default async function RootPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>
+}) {
+  const { preview } = await searchParams
+
+  let content = await getPublishedLandingContent()
+  if (preview) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user?.app_metadata?.role === 'admin') {
+      content = await getDraftLandingContent()
+    }
+  }
+
   return (
     <div style={{ backgroundColor: '#F2F1EE', minHeight: '100vh' }}>
       <LandingClient />
 
       <main>
-        <HeroSection content={landingContent.hero} />
-        <EditorialSection content={landingContent.section1} />
-        <GridSection content={landingContent.section2} />
-        <BannerSection content={landingContent.section3} />
+        <HeroSection content={content.hero} />
+        <EditorialSection content={content.section1} />
+        <GridSection content={content.section2} />
+        <BannerSection content={content.section3} />
       </main>
 
       <footer

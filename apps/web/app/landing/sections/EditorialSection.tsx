@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import type { FeaturedContent, GridItemContent } from '../content'
+import type { FeaturedContent, GridItemContent } from '@cosmos/shared'
 
 interface Props {
   content: {
