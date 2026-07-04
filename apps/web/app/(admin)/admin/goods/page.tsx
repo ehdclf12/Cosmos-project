@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import DeleteGoodsButton from './_components/DeleteGoodsButton'
+import ToggleActiveButton from './_components/ToggleActiveButton'
 import Pagination from '@/app/components/Pagination'
 
 export const metadata: Metadata = { title: '상품 관리 — Cosmos Admin' }
@@ -24,10 +25,12 @@ type GoodsListRow = {
   images: string[] | null
   category_id: string | null
   categories: { name: string } | null
+  is_active: boolean
+  created_at: string
 }
 
 interface Props {
-  searchParams: Promise<{ q?: string; status?: string; category?: string; from?: string; to?: string; page?: string }>
+  searchParams: Promise<{ q?: string; status?: string; category?: string; active?: string; from?: string; to?: string; page?: string }>
 }
 
 export default async function AdminGoodsPage({ searchParams }: Props) {
@@ -35,6 +38,7 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
   const q = sp.q ?? ''
   const statusFilter = sp.status ?? ''
   const categoryFilter = sp.category ?? ''
+  const activeFilter = sp.active ?? ''
   const dateFrom = sp.from ?? ''
   const dateTo = sp.to ?? ''
   const page = Math.max(1, Number(sp.page) || 1)
@@ -54,10 +58,11 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
 
   let query = supabase
     .from('goods')
-    .select('id, title, price, discount_rate, stock_quantity, status, images, category_id, categories(name)', { count: 'exact' })
+    .select('id, title, price, discount_rate, stock_quantity, status, images, category_id, categories(name), is_active, created_at', { count: 'exact' })
 
   if (q) query = query.ilike('title', `%${q}%`)
   if (statusFilter) query = query.eq('status', statusFilter)
+  if (activeFilter) query = query.eq('is_active', activeFilter === 'true')
   if (categoryFilter) query = query.eq('category_id', categoryFilter)
   if (dateFrom) query = query.gte('created_at', dateFrom)
   if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59')
@@ -71,11 +76,12 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
   const spRecord: Record<string, string> = {}
   if (q) spRecord.q = q
   if (statusFilter) spRecord.status = statusFilter
+  if (activeFilter) spRecord.active = activeFilter
   if (categoryFilter) spRecord.category = categoryFilter
   if (dateFrom) spRecord.from = dateFrom
   if (dateTo) spRecord.to = dateTo
 
-  const hasFilter = q || statusFilter || categoryFilter || dateFrom || dateTo
+  const hasFilter = q || statusFilter || categoryFilter || activeFilter || dateFrom || dateTo
 
   return (
     <div>
@@ -135,6 +141,16 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
           <option value="sold_out">품절</option>
           <option value="draft">임시저장</option>
         </select>
+        <select
+          name="active"
+          defaultValue={activeFilter}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none"
+          style={{ color: '#1C1C1C' }}
+        >
+          <option value="">전체 노출</option>
+          <option value="true">노출</option>
+          <option value="false">미노출</option>
+        </select>
         <input type="date" name="from" defaultValue={dateFrom}
           className="border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white outline-none" style={{ color: '#1C1C1C' }} />
         <span className="self-center text-sm" style={{ color: '#1C1C1C' }}>~</span>
@@ -164,6 +180,8 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
             <th className="pb-3 font-normal">재고</th>
             <th className="pb-3 font-normal">카테고리</th>
             <th className="pb-3 font-normal">상태</th>
+            <th className="pb-3 font-normal">노출</th>
+            <th className="pb-3 font-normal">등록일</th>
             <th className="pb-3 font-normal w-28"></th>
           </tr>
         </thead>
@@ -173,7 +191,7 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
             const stockQty = item.stock_quantity ?? 0
             const status = STATUS_STYLE[item.status] ?? { label: item.status, bg: '#E8E5E0', color: '#1C1C1C' }
             return (
-              <tr key={item.id} style={{ borderTop: '1px solid #E8E5E0' }}>
+              <tr key={item.id} style={{ borderTop: '1px solid #E8E5E0', opacity: item.is_active ? 1 : 0.5 }}>
                 <td className="py-3">
                   {(item.images as string[])?.[0] ? (
                     <img src={(item.images as string[])[0]} alt="" className="w-10 h-10 rounded-lg object-cover" />
@@ -212,6 +230,12 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
                   </span>
                 </td>
                 <td className="py-3">
+                  <ToggleActiveButton id={item.id} isActive={item.is_active} />
+                </td>
+                <td className="py-3 text-xs" style={{ color: '#6B6862' }}>
+                  {new Date(item.created_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                </td>
+                <td className="py-3">
                   <div className="flex gap-2">
                     <Link
                       href={`/admin/goods/${item.id}/edit`}
@@ -228,7 +252,7 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
           })}
           {(goods ?? []).length === 0 && (
             <tr>
-              <td colSpan={8} className="py-12 text-center text-sm" style={{ color: '#A8A49C' }}>
+              <td colSpan={10} className="py-12 text-center text-sm" style={{ color: '#A8A49C' }}>
                 {hasFilter ? '검색 결과가 없습니다.' : '등록된 상품이 없습니다.'}
               </td>
             </tr>
