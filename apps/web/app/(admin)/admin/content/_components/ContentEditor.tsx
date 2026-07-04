@@ -43,7 +43,7 @@ export default function ContentEditor({ initial }: { initial: LandingContent }) 
       {/* 편집 폼 */}
       <div className="flex-1 space-y-6 max-w-2xl">
         {/* 액션 바 */}
-        <div className="flex items-center gap-2 sticky top-0 py-2" style={{ backgroundColor: '#F2F1EE' }}>
+        <div className="flex items-center gap-2 sticky top-0 z-20 py-3" style={{ backgroundColor: '#F2F1EE', borderBottom: '1px solid #E8E5E0' }}>
           <button onClick={onSaveDraft} className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: '#1C1C1C', color: '#1C1C1C' }}>초안 저장</button>
           <button onClick={() => { setShowPreview((v) => !v); setPreviewKey((k) => k + 1) }} className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: '#1C1C1C', color: '#1C1C1C' }}>
             {showPreview ? '미리보기 숨기기' : '미리보기'}
