@@ -125,7 +125,9 @@
       "Bash(pnpm --filter web tsc --noEmit)",
       "Bash(xargs ls)",
       "Bash(echo \"EXIT: $?\")",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next', p.dependencies.next\\); console.log\\('react', p.dependencies.react\\); console.log\\('react-dom', p.dependencies['react-dom']\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next', p.dependencies.next\\); console.log\\('react', p.dependencies.react\\); console.log\\('react-dom', p.dependencies['react-dom']\\)\")",
+      "Skill(schedule)",
+      "Bash(uuidgen)"
     ]
   }
 }
