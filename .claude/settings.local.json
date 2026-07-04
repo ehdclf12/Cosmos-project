@@ -141,7 +141,8 @@
       "Bash(node -e ' *)",
       "Bash(cat node_modules/eslint-config-next/core-web-vitals.js)",
       "Bash(cat node_modules/eslint-config-next/core-web-vitals.mjs)",
-      "Bash(echo \"no as any found \\(exit $?\\)\")"
+      "Bash(echo \"no as any found \\(exit $?\\)\")",
+      "Bash(node *)"
     ]
   }
 }
