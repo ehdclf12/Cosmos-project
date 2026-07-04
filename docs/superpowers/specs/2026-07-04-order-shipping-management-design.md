@@ -21,6 +21,7 @@
 | R5 | 고객 화면(`/orders/[id]`, `/mypage/orders`)에 배송중/배송완료 시 택배사·송장번호 + **배송조회 버튼** |
 | R6 | 배송조회는 통합 조회(tracker.delivery) 링크. 택배사는 고정 목록 |
 | R7 | 관리자 상세에 **"송장용 정보" 블록** — 받는분·연락처·**우편번호(분리)**·주소·품목·주문번호를 송장 양식대로 정리 + **복사 버튼**(개별/전체). 택배사 시스템에 붙여넣기 용이 |
+| R8 | **주문자↔수령인 관계 분류**: 본인 수령 / 타인 수령(선물·대리) / 확인 필요 를 뱃지로 명확히. 주문자·수령인 정보 분리 표시. 송장용 정보는 **수령인 기준**이며 타인 수령 시 안내 표시 |
 
 ### 비목표 (Out of Scope)
 - 발송일(`shipped_at`) 컬럼, 배송 상태 실시간 API 연동(웹훅)
@@ -66,6 +67,27 @@ export function trackingUrl(courier: string | null, trackingNumber: string | nul
 
 - **순수 함수** → jest 테스트 대상. (`@cosmos/shared`의 dashboard/landing과 동일 패턴이나, Next 전용 상수라 `apps/web/lib`에 둔다. 유닛 테스트를 위해 `@cosmos/shared/src/couriers.ts`에 두는 방안도 가능 — 구현 계획에서 확정.)
 
+### 4.2 주문자↔수령인 분류 (경우의 수)
+받는분(수령인)과 주문자(등록 이름·연락처) 대조로 관계를 판정하는 순수 함수:
+```ts
+export type RecipientRelation = 'self' | 'other' | 'unknown'
+// ordererName/Phone: 주문자 profile.display_name / (profiles.phone ?? auth metadata phone)
+// recipientName/Phone: order.recipient_name / order.recipient_phone
+export function classifyRecipient(args: {
+  ordererName: string | null
+  ordererPhone: string | null
+  recipientName: string | null
+  recipientPhone: string | null
+}): RecipientRelation
+```
+판정 규칙(경우의 수):
+- **unknown**: 주문자 이름·연락처가 둘 다 없어(또는 수령인 정보 없음) 대조 불가.
+- **self**: 대조 가능한 항목(이름/연락처)이 **모두 일치**.
+- **other**: 대조 가능한 항목 중 **하나라도 명확히 불일치**(이름만 다름·연락처만 다름·둘 다 다름 포함).
+- **정규화**: 연락처는 숫자만 추출 후 비교(하이픈/공백/국가번호 표기 차 무시), 이름은 앞뒤·중복 공백 제거 후 비교. 한쪽만 있는 항목은 그 항목으로만 판정하고 없는 항목은 무시(단, 이름·연락처 모두 대조 불가면 unknown).
+
+→ **순수 함수** → jest 테스트(완전일치 / 이름만 다름 / 연락처만 다름 / 둘 다 다름 / 하이픈만 다른 동일번호 / 주문자정보 없음 / 수령인정보 없음).
+
 ### 4.1 배송지 파싱 (송장용 정보)
 `shipping_address`는 체크아웃에서 `(${zonecode}) ${baseAddress} ${detailAddress}` 형식으로 저장된다. 우편번호를 분리하는 순수 함수:
 ```ts
@@ -93,6 +115,12 @@ export function parseShippingAddress(shipping: string | null): { zonecode: strin
 - 각 항목에 **복사 버튼**, 상단에 **"전체 복사"** 버튼(모든 항목을 `라벨: 값` 줄바꿈 텍스트로 클립보드 복사).
 - 클라이언트 컴포넌트(`navigator.clipboard.writeText`). 복사 시 잠깐 "복사됨" 피드백.
 
+### 5.5 주문자↔수령인 구분 표시
+- 상세 상단(또는 배송/송장 영역)에 **수령 유형 뱃지**: `본인 수령`(회색/중립) · `타인 수령 (선물·대리)`(파랑 강조) · `수령인 확인 필요`(주황). `classifyRecipient` 결과 기반.
+- **주문자 정보**와 **수령인(배송) 정보**를 분리된 블록으로 명확히 라벨링(현재도 분리돼 있으나 관계 뱃지로 강조). 타인 수령이면 수령인 블록을 시각적으로 강조.
+- **송장용 정보 블록(§5.4)은 항상 수령인 기준**. `other`(타인 수령)이면 블록 상단에 "받는분이 주문자와 다릅니다 · 송장은 받는분(수령인) 기준으로 작성" 안내 표시.
+- 기존 인라인 `isThirdPartyDelivery`(nameDiffers/phoneDiffers) 로직은 `classifyRecipient`로 대체(중복 제거).
+
 ### 5.3 액션
 `app/(admin)/admin/orders/[id]/actions.ts`에 추가(기존 `adminCancelOrderItem` 파일):
 - `shipOrder(orderId, courier, trackingNumber): Promise<{error?: string}>` — 검증 후 update.
@@ -107,7 +135,7 @@ export function parseShippingAddress(shipping: string | null): { zonecode: strin
 
 ```
 supabase/migrations/022_orders_shipping.sql                   # courier, tracking_number
-packages/shared/src/couriers.ts                               # COURIERS + courierLabel + trackingUrl + parseShippingAddress (순수, jest)
+packages/shared/src/couriers.ts                               # COURIERS + courierLabel + trackingUrl + parseShippingAddress + classifyRecipient (순수, jest)
 app/(admin)/admin/orders/[id]/actions.ts                      # shipOrder / updateTracking (수정)
 app/(admin)/admin/orders/[id]/_components/ShipmentForm.tsx    # 배송 처리 폼 (신규, 클라이언트)
 app/(admin)/admin/orders/[id]/_components/WaybillInfo.tsx     # 송장용 정보 블록 + 복사 (신규, 클라이언트)
@@ -119,8 +147,8 @@ app/mypage/orders/page.tsx                                    # 고객 배송정
 
 ## 8. 테스트 & 검증
 
-- **jest**: `trackingUrl`(정상 코드/번호 → 올바른 URL, null 입력 → null), `courierLabel`(매핑/미지 코드 fallback), `parseShippingAddress`(정상 `(우편번호) 주소` 분리 / 형식불일치 → zonecode 빈값+원문 / null).
-- **/verify**: (a) 상품준비중 주문 상세 → 택배사·송장 입력 → 발송 처리 → 배송중 전환 + 송장 표시, (b) 고객 주문 화면에 택배사·송장·배송조회 버튼, 링크 이동, (c) 송장 수정, (d) 목록/상세 상태 드롭다운에 '배송중' 없음, (e) **송장용 정보 블록**: 우편번호 분리 표시, 개별/전체 복사 동작(클립보드).
+- **jest**: `trackingUrl`(정상 코드/번호 → 올바른 URL, null 입력 → null), `courierLabel`(매핑/미지 코드 fallback), `parseShippingAddress`(정상 `(우편번호) 주소` 분리 / 형식불일치 → zonecode 빈값+원문 / null), `classifyRecipient`(§4.2의 7가지 경우의 수).
+- **/verify**: (a) 상품준비중 주문 상세 → 택배사·송장 입력 → 발송 처리 → 배송중 전환 + 송장 표시, (b) 고객 주문 화면에 택배사·송장·배송조회 버튼, 링크 이동, (c) 송장 수정, (d) 목록/상세 상태 드롭다운에 '배송중' 없음, (e) **송장용 정보 블록**: 우편번호 분리 표시, 개별/전체 복사 동작(클립보드), (f) **주문자↔수령인**: 본인 수령/타인 수령/확인 필요 뱃지가 각 경우에 맞게 뜨고, 타인 수령 주문에서 송장용 정보가 수령인 기준 + 안내 표시.
 - **lint/tsc**: eslint 0 errors, tsc 통과.
 
 ## 9. 엣지 케이스 / 결정사항
