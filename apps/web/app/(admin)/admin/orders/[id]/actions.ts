@@ -1,6 +1,7 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin-client'
+import { COURIERS } from '@cosmos/shared'
 
 export async function adminCancelOrderItem(orderId: string, itemId: string) {
   const admin = createAdminClient()
@@ -47,6 +48,9 @@ export async function shipOrder(
   if (!courier.trim() || !trackingNumber.trim()) {
     return { error: '택배사와 송장번호를 입력해주세요.' }
   }
+  if (!COURIERS.some((c) => c.code === courier.trim())) {
+    return { error: '유효한 택배사를 선택해주세요.' }
+  }
   const admin = createAdminClient()
   const { error } = await admin
     .from('orders')
@@ -65,6 +69,9 @@ export async function updateTracking(
 ): Promise<{ error?: string }> {
   if (!courier.trim() || !trackingNumber.trim()) {
     return { error: '택배사와 송장번호를 입력해주세요.' }
+  }
+  if (!COURIERS.some((c) => c.code === courier.trim())) {
+    return { error: '유효한 택배사를 선택해주세요.' }
   }
   const admin = createAdminClient()
   const { error } = await admin

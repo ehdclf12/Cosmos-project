@@ -275,7 +275,7 @@ export default async function OrderDetailPage({ params }: Props) {
             recipientName={order.recipient_name}
             recipientPhone={order.recipient_phone}
             shippingAddress={order.shipping_address}
-            items={order.order_items.filter((i) => i.status !== 'cancelled').map((i) => ({ title: i.title, quantity: i.quantity }))}
+            items={activeItems.map((i) => ({ title: i.title, quantity: i.quantity }))}
             orderNo={order.id.slice(0, 8).toUpperCase()}
             isOther={relation === 'other'}
           />
