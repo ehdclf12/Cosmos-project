@@ -129,7 +129,12 @@
       "Skill(schedule)",
       "Bash(uuidgen)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('scripts:',JSON.stringify\\(p.scripts\\)\\); console.log\\('jest?', !!\\(p.devDependencies?.jest||p.dependencies?.jest\\)\\); console.log\\('deps has zustand/next-image etc:', Object.keys\\(p.dependencies||{}\\).join\\(','\\)\\)\")",
-      "Bash(node -e \"const p=require\\('../../packages/shared/package.json'\\); console.log\\(JSON.stringify\\(p.scripts\\)\\); console.log\\('deps:',Object.keys\\(p.devDependencies||{}\\).join\\(','\\)\\)\")"
+      "Bash(node -e \"const p=require\\('../../packages/shared/package.json'\\); console.log\\(JSON.stringify\\(p.scripts\\)\\); console.log\\('deps:',Object.keys\\(p.devDependencies||{}\\).join\\(','\\)\\)\")",
+      "Bash(git show *)",
+      "Bash(sed -n '79,163p' .superpowers/sdd/task-1-brief.md)",
+      "Read(//tmp/**)",
+      "Bash(sed -n '15,65p' .superpowers/sdd/task-1-brief.md)",
+      "Bash(python3 *)"
     ]
   }
 }
