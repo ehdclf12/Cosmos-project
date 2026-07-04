@@ -22,6 +22,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
       .select('id, title, price, discount_rate, images')
       .eq('id', goodsId)
       .eq('status', 'active')
+      .eq('is_active', true)
       .single()
     if (data) {
       const finalPrice = Math.round(data.price * (1 - (data.discount_rate ?? 0) / 100))
