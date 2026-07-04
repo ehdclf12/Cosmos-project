@@ -3,7 +3,10 @@
 --    (기존: greatest(0, 재고-수량) — 음수만 막고 부족해도 주문을 막지 못함)
 -- 호출부(체크아웃)는 반환값 false면 주문을 만들지 않고 롤백한다.
 
-create or replace function public.decrement_stock(p_goods_id uuid, p_quantity integer)
+-- 반환 타입(void → boolean) 변경이라 create or replace로는 안 되고 먼저 DROP 필요
+drop function if exists public.decrement_stock(uuid, integer);
+
+create function public.decrement_stock(p_goods_id uuid, p_quantity integer)
 returns boolean
 language plpgsql
 security definer
