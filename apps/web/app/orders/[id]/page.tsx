@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import LandingClient from '@/app/landing/LandingClient'
 import CancelOrderButton from './_components/CancelOrderButton'
 import CancelItemButton from './_components/CancelItemButton'
+import { courierLabel, trackingUrl } from '@cosmos/shared'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -158,6 +159,24 @@ export default async function OrderDetailPage({ params }: Props) {
           <p className="text-sm" style={{ color: '#6B6862' }}>{order.shipping_address}</p>
           {order.memo && (
             <p className="text-xs mt-2" style={{ color: '#A8A49C' }}>{order.memo}</p>
+          )}
+          {(order.status === 'shipping' || order.status === 'delivered') && order.tracking_number && (
+            <div className="mt-3 pt-3 border-t" style={{ borderColor: '#D8D5CF' }}>
+              <p className="text-sm mb-1" style={{ color: '#1C1C1C' }}>
+                {courierLabel(order.courier)} · {order.tracking_number}
+              </p>
+              {trackingUrl(order.courier, order.tracking_number) && (
+                <a
+                  href={trackingUrl(order.courier, order.tracking_number)!}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block mt-1 text-xs px-3 py-1.5 rounded-lg text-white"
+                  style={{ backgroundColor: '#1C1C1C' }}
+                >
+                  배송조회
+                </a>
+              )}
+            </div>
           )}
         </section>
 
