@@ -127,7 +127,9 @@
       "Bash(echo \"EXIT: $?\")",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('next', p.dependencies.next\\); console.log\\('react', p.dependencies.react\\); console.log\\('react-dom', p.dependencies['react-dom']\\)\")",
       "Skill(schedule)",
-      "Bash(uuidgen)"
+      "Bash(uuidgen)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\('scripts:',JSON.stringify\\(p.scripts\\)\\); console.log\\('jest?', !!\\(p.devDependencies?.jest||p.dependencies?.jest\\)\\); console.log\\('deps has zustand/next-image etc:', Object.keys\\(p.dependencies||{}\\).join\\(','\\)\\)\")",
+      "Bash(node -e \"const p=require\\('../../packages/shared/package.json'\\); console.log\\(JSON.stringify\\(p.scripts\\)\\); console.log\\('deps:',Object.keys\\(p.devDependencies||{}\\).join\\(','\\)\\)\")"
     ]
   }
 }
