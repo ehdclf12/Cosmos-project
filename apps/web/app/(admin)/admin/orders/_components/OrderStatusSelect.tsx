@@ -3,11 +3,11 @@ import { useState } from 'react'
 import { updateOrderStatus } from '../actions'
 
 const STATUS_OPTIONS = [
-  { value: 'paid', label: '결제완료' },
-  { value: 'preparing', label: '상품준비중' },
-  { value: 'shipping', label: '배송중' },
-  { value: 'delivered', label: '배송완료' },
-  { value: 'cancelled', label: '취소됨' },
+  { value: 'paid', label: '결제완료', disabled: false },
+  { value: 'preparing', label: '상품준비중', disabled: false },
+  { value: 'shipping', label: '배송중 (발송 처리로만)', disabled: true },
+  { value: 'delivered', label: '배송완료', disabled: false },
+  { value: 'cancelled', label: '취소됨', disabled: false },
 ]
 
 export default function OrderStatusSelect({ id, status }: { id: string; status: string }) {
@@ -32,8 +32,8 @@ export default function OrderStatusSelect({ id, status }: { id: string; status: 
       className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none cursor-pointer disabled:opacity-50"
       style={{ color: '#1C1C1C' }}
     >
-      {STATUS_OPTIONS.map(({ value: v, label }) => (
-        <option key={v} value={v}>{label}</option>
+      {STATUS_OPTIONS.map(({ value: v, label, disabled }) => (
+        <option key={v} value={v} disabled={disabled}>{label}</option>
       ))}
     </select>
   )

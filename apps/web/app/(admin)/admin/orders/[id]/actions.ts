@@ -38,3 +38,40 @@ export async function adminCancelOrderItem(orderId: string, itemId: string) {
   revalidatePath('/admin/orders')
   return { success: true }
 }
+
+export async function shipOrder(
+  orderId: string,
+  courier: string,
+  trackingNumber: string
+): Promise<{ error?: string }> {
+  if (!courier.trim() || !trackingNumber.trim()) {
+    return { error: '택배사와 송장번호를 입력해주세요.' }
+  }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('orders')
+    .update({ status: 'shipping', courier: courier.trim(), tracking_number: trackingNumber.trim() })
+    .eq('id', orderId)
+  if (error) return { error: error.message }
+  revalidatePath(`/admin/orders/${orderId}`)
+  revalidatePath('/admin/orders')
+  return {}
+}
+
+export async function updateTracking(
+  orderId: string,
+  courier: string,
+  trackingNumber: string
+): Promise<{ error?: string }> {
+  if (!courier.trim() || !trackingNumber.trim()) {
+    return { error: '택배사와 송장번호를 입력해주세요.' }
+  }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('orders')
+    .update({ courier: courier.trim(), tracking_number: trackingNumber.trim() })
+    .eq('id', orderId)
+  if (error) return { error: error.message }
+  revalidatePath(`/admin/orders/${orderId}`)
+  return {}
+}
