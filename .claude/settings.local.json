@@ -135,7 +135,13 @@
       "Read(//tmp/**)",
       "Bash(sed -n '15,65p' .superpowers/sdd/task-1-brief.md)",
       "Bash(python3 *)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); const d={...p.dependencies,...p.devDependencies}; console.log\\('tailwindcss:', d.tailwindcss||'?'\\); console.log\\('@tailwindcss/postcss:', d['@tailwindcss/postcss']||'-'\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); const d={...p.dependencies,...p.devDependencies}; console.log\\('tailwindcss:', d.tailwindcss||'?'\\); console.log\\('@tailwindcss/postcss:', d['@tailwindcss/postcss']||'-'\\)\")",
+      "Bash(xargs -I{} echo {})",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node -e ' *)",
+      "Bash(cat node_modules/eslint-config-next/core-web-vitals.js)",
+      "Bash(cat node_modules/eslint-config-next/core-web-vitals.mjs)",
+      "Bash(echo \"no as any found \\(exit $?\\)\")"
     ]
   }
 }
