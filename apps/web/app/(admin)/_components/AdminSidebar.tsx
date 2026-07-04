@@ -11,6 +11,7 @@ const GOODS_SUB = [
 
 const NAV_ITEMS = [
   { href: '/admin/customers', label: '고객관리' },
+  { href: '/admin/content', label: '콘텐츠 관리' },
   { href: '/admin/clubs', label: '독서클럽' },
 ]
 
