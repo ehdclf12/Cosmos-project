@@ -113,6 +113,14 @@ export default function CheckoutForm({ userId, directItem }: Props) {
     }
   }
 
+  function completeOrder(orderId: string) {
+    if (!isDirectBuy) {
+      // 주문한 항목만 장바구니에서 제거
+      selectedItems.forEach((item) => removeItem(item.goodsId))
+    }
+    router.push(`/orders/${orderId}`)
+  }
+
   async function handleOrder() {
     setError('')
     if (!recipientName.trim()) { setError('수령인명을 입력해주세요.'); return }
@@ -122,8 +130,44 @@ export default function CheckoutForm({ userId, directItem }: Props) {
     if (selectedItems.length === 0) { setError('주문할 상품을 선택해주세요.'); return }
     setLoading(true)
     const supabase = createClient()
+    const shippingAddress = `(${zonecode}) ${baseAddress} ${detailAddress.trim()}`
 
-    // 1. 재고 선점 — 조건부 차감(재고 충분할 때만 성공). 부족하면 주문을 만들지 않고 이미 차감한 것 롤백.
+    // === 1순위: place_order RPC — 재고차감+주문+항목을 단일 트랜잭션으로 원자 처리 ===
+    const { data: placedId, error: rpcError } = await supabase.rpc('place_order', {
+      p_items: selectedItems.map((i) => ({
+        goods_id: i.goodsId,
+        title: i.title,
+        price: i.price,
+        image_url: i.imageUrl,
+        quantity: i.quantity,
+      })),
+      p_recipient_name: recipientName.trim(),
+      p_recipient_phone: recipientPhone.trim(),
+      p_shipping_address: shippingAddress,
+      p_memo: memo.trim(),
+    })
+
+    if (!rpcError && placedId) {
+      completeOrder(String(placedId))
+      return
+    }
+    if (rpcError && /INSUFFICIENT_STOCK/.test(rpcError.message)) {
+      const title = rpcError.message.split('INSUFFICIENT_STOCK:')[1]?.trim()
+      setError(`재고가 부족한 상품이 있습니다${title ? `: ${title}` : ''}.`)
+      setLoading(false)
+      return
+    }
+    // place_order 미배포(함수 없음)면 아래 폴백으로, 그 외 에러는 중단
+    const fnMissing =
+      rpcError?.code === 'PGRST202' ||
+      /find the function|does not exist|schema cache/i.test(rpcError?.message ?? '')
+    if (rpcError && !fnMissing) {
+      setError('주문 처리 중 오류가 발생했습니다.')
+      setLoading(false)
+      return
+    }
+
+    // === 폴백(place_order 미배포 시): 기존 다단계 플로우 (decrement-first + rollback) ===
     const decremented: CartItem[] = []
     async function rollbackStock() {
       await Promise.all(
@@ -156,7 +200,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
         total_amount: totalAmount,
         recipient_name: recipientName.trim(),
         recipient_phone: recipientPhone.trim(),
-        shipping_address: `(${zonecode}) ${baseAddress} ${detailAddress.trim()}`,
+        shipping_address: shippingAddress,
         memo: memo.trim() || null,
       })
       .select('id')
@@ -189,12 +233,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
       return
     }
 
-    if (!isDirectBuy) {
-      // 주문한 항목만 장바구니에서 제거
-      selectedItems.forEach((item) => removeItem(item.goodsId))
-    }
-
-    router.push(`/orders/${order.id}`)
+    completeOrder(order.id)
   }
 
   if (!isDirectBuy && cartItems.length === 0) return null
