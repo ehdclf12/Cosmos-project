@@ -5,7 +5,7 @@ import { saveDraft, publish } from '../actions'
 import HeroImagesField from './HeroImagesField'
 import SlotImageField from './SlotImageField'
 
-const inputCls = 'w-full border rounded px-2 py-1.5 text-sm bg-white text-[#1C1C1C] placeholder:text-[#A8A49C]'
+const inputCls = 'w-full border rounded px-2 py-1.5 text-sm bg-white text-black placeholder:text-[#A8A49C]'
 const cardCls = 'rounded-2xl p-5 space-y-3'
 const cardStyle = { backgroundColor: '#F5F4F1', border: '1px solid #E8E5E0' } as const
 
