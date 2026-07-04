@@ -138,6 +138,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
             <th className="pb-2 font-normal">금액</th>
             <th className="pb-2 font-normal">상태</th>
             <th className="pb-2 font-normal">일시</th>
+            <th className="pb-2 font-normal">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -149,7 +150,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 <td className="py-3">
                   <Link
                     href={`/admin/orders/${order.id}`}
-                    className="hover:underline font-mono"
+                    className="underline underline-offset-2 font-mono hover:opacity-70"
                     style={{ color: '#1C1C1C' }}
                   >
                     {order.id.slice(0, 8).toUpperCase()}
@@ -169,12 +170,35 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
                   {new Date(order.created_at).toLocaleDateString('ko-KR')}
                 </td>
+                <td className="py-3">
+                  {(() => {
+                    const action =
+                      order.status === 'paid' || order.status === 'preparing'
+                        ? { label: '배송 처리', primary: true }
+                        : order.status === 'shipping'
+                        ? { label: '배송정보', primary: false }
+                        : { label: '상세', primary: false }
+                    return (
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="inline-block px-3 py-1.5 rounded-lg text-xs whitespace-nowrap transition-opacity hover:opacity-80"
+                        style={
+                          action.primary
+                            ? { backgroundColor: '#1C1C1C', color: '#fff' }
+                            : { border: '1px solid #1C1C1C', color: '#1C1C1C' }
+                        }
+                      >
+                        {action.label}
+                      </Link>
+                    )
+                  })()}
+                </td>
               </tr>
             )
           })}
           {(orders ?? []).length === 0 && (
             <tr>
-              <td colSpan={7} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>
+              <td colSpan={8} className="py-12 text-center text-sm" style={{ color: '#1C1C1C' }}>
                 {q || statusFilter || dateFrom || dateTo ? '검색 결과가 없습니다.' : '주문이 없습니다.'}
               </td>
             </tr>
