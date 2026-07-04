@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { useCartStore } from '@/lib/cart-store'
 
 interface Props {
@@ -11,12 +11,12 @@ interface Props {
 }
 
 export default function LandingHeader({ onMenuClick, nickname, isAdmin, onLogout }: Props) {
-  const [cartCount, setCartCount] = useState(0)
-
-  useEffect(() => {
-    setCartCount(useCartStore.getState().totalCount())
-    return useCartStore.subscribe((state) => setCartCount(state.totalCount()))
-  }, [])
+  // 외부 스토어 구독 (SSR=0, 클라이언트=실제 카운트) — effect 내 setState 회피
+  const cartCount = useSyncExternalStore(
+    (cb) => useCartStore.subscribe(cb),
+    () => useCartStore.getState().totalCount(),
+    () => 0
+  )
 
   return (
     <header

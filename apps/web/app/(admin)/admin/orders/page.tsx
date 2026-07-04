@@ -8,6 +8,16 @@ export const metadata: Metadata = { title: '주문 관리 — Cosmos Admin' }
 
 const PAGE_SIZE = 20
 
+type OrderListRow = {
+  id: string
+  status: string
+  total_amount: number | null
+  created_at: string
+  user_id: string
+  recipient_name: string | null
+  order_items: { title: string; quantity: number }[]
+}
+
 const STATUS_LABEL: Record<string, string> = {
   paid: '결제완료',
   preparing: '상품준비중',
@@ -58,9 +68,10 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
   if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59')
 
   const from = (page - 1) * PAGE_SIZE
-  const { data: orders, count: totalCount } = await query
+  const { data: ordersData, count: totalCount } = await query
     .order('created_at', { ascending: false })
     .range(from, from + PAGE_SIZE - 1)
+  const orders = (ordersData ?? []) as unknown as OrderListRow[]
 
   const userIds = [...new Set((orders ?? []).map((o) => o.user_id).filter(Boolean))]
   const { data: profileRows } = userIds.length > 0
@@ -110,9 +121,9 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
           검색
         </button>
         {(q || statusFilter || dateFrom || dateTo) && (
-          <a href="/admin/orders" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
+          <Link href="/admin/orders" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
             초기화
-          </a>
+          </Link>
         )}
       </form>
 
@@ -131,7 +142,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
         </thead>
         <tbody>
           {(orders ?? []).map((order) => {
-            const items = (order.order_items as { title: string; quantity: number }[]) ?? []
+            const items = order.order_items ?? []
             const itemLabel = items.map((i) => `${i.title} x${i.quantity}`).join(', ')
             return (
               <tr key={order.id} style={{ borderTop: '1px solid #E8E5E0' }}>
@@ -148,7 +159,7 @@ export default async function AdminOrdersPage({ searchParams }: Props) {
                   {profileMap[order.user_id] ?? '-'}
                 </td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>
-                  {(order as any).recipient_name ?? '-'}
+                  {order.recipient_name ?? '-'}
                 </td>
                 <td className="py-3 max-w-xs truncate" style={{ color: '#1C1C1C' }}>{itemLabel || '-'}</td>
                 <td className="py-3" style={{ color: '#1C1C1C' }}>{(order.total_amount ?? 0).toLocaleString()}원</td>

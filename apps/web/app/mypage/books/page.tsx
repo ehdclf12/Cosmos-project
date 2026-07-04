@@ -23,7 +23,7 @@ export default async function MyBooksPage() {
   type BookEntry = { status: string; book: { id: string; title: string; author: string; cover_url: string | null } | null }
   const userBooks: BookEntry[] = (rows ?? []).map((r) => ({
     status: r.status,
-    book: Array.isArray(r.book) ? (r.book[0] ?? null) : (r.book as any),
+    book: Array.isArray(r.book) ? (r.book[0] ?? null) : (r.book as unknown as BookEntry['book']),
   }))
 
   return (

@@ -5,7 +5,7 @@ import LandingClient from '@/app/landing/LandingClient'
 import { createClient } from '@/lib/supabase/server'
 import AddToCartButton from '../_components/AddToCartButton'
 import WishlistButton from '../_components/WishlistButton'
-import GoodsCard from '../_components/GoodsCard'
+import GoodsCard, { type GoodsItem } from '../_components/GoodsCard'
 import GoodsImageSlider from '../_components/GoodsImageSlider'
 
 interface Props {
@@ -54,7 +54,7 @@ export default async function GoodsDetailPage({ params }: Props) {
     .or(`published_at.is.null,published_at.lte.${now}`)
     .neq('status', 'draft')
     .limit(4)
-  const related = relatedData ?? []
+  const related = (relatedData ?? []) as unknown as GoodsItem[]
 
   const finalPrice = Math.round(item.price * (1 - (item.discount_rate ?? 0) / 100))
   const images: string[] = item.images ?? []
@@ -143,7 +143,7 @@ export default async function GoodsDetailPage({ params }: Props) {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10">
               {related.map((rel) => (
-                <GoodsCard key={rel.id} item={rel as any} />
+                <GoodsCard key={rel.id} item={rel} />
               ))}
             </div>
           </section>

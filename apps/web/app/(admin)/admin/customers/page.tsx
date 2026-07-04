@@ -83,9 +83,9 @@ export default async function AdminCustomersPage({ searchParams }: Props) {
           검색
         </button>
         {(q || dateFrom || dateTo) && (
-          <a href="/admin/customers" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
+          <Link href="/admin/customers" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
             초기화
-          </a>
+          </Link>
         )}
       </form>
 

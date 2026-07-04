@@ -5,6 +5,13 @@ import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: '상품 상세 — Cosmos Admin' }
 
+type GoodsOrderRel = {
+  id: string
+  status: string
+  created_at: string
+  profiles: { display_name: string } | null
+} | null
+
 interface Props { params: Promise<{ id: string }> }
 
 export default async function AdminGoodsDetailPage({ params }: Props) {
@@ -33,7 +40,7 @@ export default async function AdminGoodsDetailPage({ params }: Props) {
 
   if (!item) notFound()
 
-  const paidItems = (orderItems ?? []).filter((oi) => (oi.orders as any)?.status === 'paid')
+  const paidItems = (orderItems ?? []).filter((oi) => (oi.orders as unknown as GoodsOrderRel)?.status === 'paid')
   const totalQty = paidItems.reduce((s, i) => s + (i.quantity ?? 0), 0)
   const totalRevenue = paidItems.reduce((s, i) => s + (i.quantity ?? 0) * (i.unit_price ?? 0), 0)
   const finalPrice = Math.round(item.price * (1 - (item.discount_rate ?? 0) / 100))
@@ -119,7 +126,7 @@ export default async function AdminGoodsDetailPage({ params }: Props) {
         </thead>
         <tbody>
           {(orderItems ?? []).map((oi) => {
-            const order = oi.orders as any
+            const order = oi.orders as unknown as GoodsOrderRel
             return (
               <tr key={oi.id ?? order?.id} style={{ borderTop: '1px solid #E8E5E0' }}>
                 <td className="py-2" style={{ color: '#1C1C1C' }}>{order?.id?.slice(0, 8).toUpperCase() ?? '-'}</td>

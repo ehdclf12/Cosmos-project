@@ -24,10 +24,14 @@ export default function CheckoutForm({ userId, directItem }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() =>
     new Set(cartItems.map((i) => i.goodsId))
   )
+  const [prevCartKey, setPrevCartKey] = useState(() =>
+    cartItems.map((i) => i.goodsId).join(',')
+  )
 
-  // 장바구니 아이템 변경 시 새 아이템 자동 선택
-  useEffect(() => {
-    if (isDirectBuy) return
+  // 장바구니 아이템 변경 시 새 아이템 자동 선택 (렌더 중 동기화 — effect 내 setState 회피)
+  const cartKey = cartItems.map((i) => i.goodsId).join(',')
+  if (!isDirectBuy && cartKey !== prevCartKey) {
+    setPrevCartKey(cartKey)
     setSelectedIds((prev) => {
       const next = new Set(prev)
       cartItems.forEach((i) => {
@@ -35,7 +39,7 @@ export default function CheckoutForm({ userId, directItem }: Props) {
       })
       return next
     })
-  }, [cartItems, isDirectBuy])
+  }
 
   const selectedItems = isDirectBuy
     ? items

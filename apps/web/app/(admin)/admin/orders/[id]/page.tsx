@@ -8,6 +8,19 @@ import AdminCancelItemButton from './_components/AdminCancelItemButton'
 
 export const metadata: Metadata = { title: '주문 상세 — Cosmos Admin' }
 
+type OrderDetail = {
+  id: string
+  status: string
+  total_amount: number | null
+  created_at: string
+  user_id: string
+  recipient_name: string | null
+  recipient_phone: string | null
+  shipping_address: string | null
+  memo: string | null
+  order_items: { id: string; title: string; quantity: number; price: number; status: string }[]
+}
+
 interface Props { params: Promise<{ id: string }> }
 
 export default async function OrderDetailPage({ params }: Props) {
@@ -15,7 +28,7 @@ export default async function OrderDetailPage({ params }: Props) {
   const supabase = await createClient()
   const adminClient = createAdminClient()
 
-  const { data: order } = await supabase
+  const { data } = await supabase
     .from('orders')
     .select(`
       id, status, total_amount, created_at, user_id,
@@ -25,7 +38,8 @@ export default async function OrderDetailPage({ params }: Props) {
     .eq('id', id)
     .single()
 
-  if (!order) notFound()
+  if (!data) notFound()
+  const order = data as unknown as OrderDetail
 
   const [{ data: authData }, { data: profileData }] = await Promise.all([
     adminClient.auth.admin.getUserById(order.user_id),
@@ -40,13 +54,13 @@ export default async function OrderDetailPage({ params }: Props) {
 
   // 수령인 이름·연락처 중 하나라도 주문자와 다르면 타인 배송으로 판단
   const normalize = (p: string) => p.replace(/\D/g, '')
-  const nameDiffers = profile?.display_name && (order as any).recipient_name &&
-    profile.display_name !== (order as any).recipient_name
-  const phoneDiffers = registeredPhone && (order as any).recipient_phone &&
-    normalize(registeredPhone) !== normalize((order as any).recipient_phone)
+  const nameDiffers = profile?.display_name && order.recipient_name &&
+    profile.display_name !== order.recipient_name
+  const phoneDiffers = registeredPhone && order.recipient_phone &&
+    normalize(registeredPhone) !== normalize(order.recipient_phone)
   const isThirdPartyDelivery = !!(nameDiffers || phoneDiffers)
 
-  const items = (order.order_items as { id: string; title: string; quantity: number; price: number; status: string }[]) ?? []
+  const items = order.order_items ?? []
   const activeItems = items.filter((i) => i.status !== 'cancelled')
   const activeTotal = activeItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
   const hasPartialCancel = items.some((i) => i.status === 'cancelled') && order.status !== 'cancelled'
@@ -190,20 +204,20 @@ export default async function OrderDetailPage({ params }: Props) {
         <div className="rounded-2xl p-5 space-y-2" style={{ backgroundColor: '#E8E5E0' }}>
           <div className="flex items-center justify-between">
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>수령인명</span>
-            <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).recipient_name ?? '-'}</span>
+            <span className="text-sm" style={{ color: '#1C1C1C' }}>{order.recipient_name ?? '-'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>연락처</span>
-            <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).recipient_phone ?? '-'}</span>
+            <span className="text-sm" style={{ color: '#1C1C1C' }}>{order.recipient_phone ?? '-'}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>배송지</span>
-            <span className="text-sm text-right max-w-xs" style={{ color: '#1C1C1C' }}>{(order as any).shipping_address ?? '-'}</span>
+            <span className="text-sm text-right max-w-xs" style={{ color: '#1C1C1C' }}>{order.shipping_address ?? '-'}</span>
           </div>
-          {(order as any).memo && (
+          {order.memo && (
             <div className="flex items-center justify-between">
               <span className="text-xs" style={{ color: '#1C1C1C', opacity: 0.6 }}>메모</span>
-              <span className="text-sm" style={{ color: '#1C1C1C' }}>{(order as any).memo}</span>
+              <span className="text-sm" style={{ color: '#1C1C1C' }}>{order.memo}</span>
             </div>
           )}
         </div>

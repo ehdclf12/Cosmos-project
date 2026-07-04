@@ -16,8 +16,8 @@ export default async function MyClubsPage() {
 
   type ClubData = { id: string; name: string; description: string | null; tags: string[]; access_type: string }
   const clubs: ClubData[] = (memberships ?? [])
-    .map((m) => Array.isArray(m.club) ? (m.club[0] ?? null) : (m.club as any))
-    .filter(Boolean)
+    .map((m) => Array.isArray(m.club) ? (m.club[0] ?? null) : (m.club as unknown as ClubData))
+    .filter((c): c is ClubData => Boolean(c))
 
   return (
     <div>

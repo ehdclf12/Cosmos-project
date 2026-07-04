@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/supabase/admin-client'
 
 export const metadata: Metadata = { title: '고객 상세 — Cosmos Admin' }
 
+type WishGoods = { id: string; title: string; price: number }
+
 interface Props { params: Promise<{ id: string }> }
 
 export default async function CustomerDetailPage({ params }: Props) {
@@ -35,8 +37,8 @@ export default async function CustomerDetailPage({ params }: Props) {
   if (!profile) notFound()
 
   const wishlistGoods = (wishlist ?? [])
-    .map((r) => (Array.isArray(r.goods) ? r.goods[0] : (r.goods as any)))
-    .filter(Boolean)
+    .map((r) => (Array.isArray(r.goods) ? r.goods[0] : (r.goods as unknown as WishGoods)))
+    .filter((g): g is WishGoods => Boolean(g))
 
   return (
     <div>
@@ -98,7 +100,7 @@ export default async function CustomerDetailPage({ params }: Props) {
           <p className="text-sm" style={{ color: '#1C1C1C' }}>위시리스트가 비어있습니다.</p>
         ) : (
           <div className="space-y-2">
-            {wishlistGoods.map((item: any) => (
+            {wishlistGoods.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center justify-between rounded-xl p-3"

@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import GoodsCard from '@/app/goods/_components/GoodsCard'
+import GoodsCard, { type GoodsItem } from '@/app/goods/_components/GoodsCard'
 
 export default async function WishlistPage() {
   const supabase = await createClient()
@@ -14,8 +14,8 @@ export default async function WishlistPage() {
     .order('created_at', { ascending: false })
 
   const goods = (rows ?? [])
-    .map((r) => Array.isArray(r.goods) ? (r.goods[0] ?? null) : (r.goods as any))
-    .filter(Boolean)
+    .map((r) => Array.isArray(r.goods) ? (r.goods[0] ?? null) : (r.goods as unknown as GoodsItem))
+    .filter((g): g is GoodsItem => Boolean(g))
 
   return (
     <div>
@@ -25,7 +25,7 @@ export default async function WishlistPage() {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
           {goods.map((item) => (
-            <GoodsCard key={item!.id} item={item as any} />
+            <GoodsCard key={item.id} item={item} />
           ))}
         </div>
       )}

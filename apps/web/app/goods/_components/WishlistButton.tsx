@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -11,11 +11,14 @@ interface Props {
 export default function WishlistButton({ goodsId, initialWished = false }: Props) {
   const router = useRouter()
   const [wished, setWished] = useState(initialWished)
+  const [prevInitial, setPrevInitial] = useState(initialWished)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
+  // initialWished prop이 바뀌면 렌더 중 동기화 (effect 내 setState 회피)
+  if (initialWished !== prevInitial) {
+    setPrevInitial(initialWished)
     setWished(initialWished)
-  }, [initialWished])
+  }
 
   async function toggle() {
     const supabase = createClient()

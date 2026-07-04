@@ -14,6 +14,18 @@ const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }>
   draft:    { label: '임시저장', bg: '#FEF9C3', color: '#854D0E' },
 }
 
+type GoodsListRow = {
+  id: string
+  title: string
+  price: number
+  discount_rate: number | null
+  stock_quantity: number | null
+  status: string
+  images: string[] | null
+  category_id: string | null
+  categories: { name: string } | null
+}
+
 interface Props {
   searchParams: Promise<{ q?: string; status?: string; category?: string; from?: string; to?: string; page?: string }>
 }
@@ -51,9 +63,10 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
   if (dateTo) query = query.lte('created_at', dateTo + 'T23:59:59')
 
   const from = (page - 1) * PAGE_SIZE
-  const { data: goods, count: totalCount } = await query
+  const { data: goodsData, count: totalCount } = await query
     .order('created_at', { ascending: false })
     .range(from, from + PAGE_SIZE - 1)
+  const goods = (goodsData ?? []) as unknown as GoodsListRow[]
 
   const spRecord: Record<string, string> = {}
   if (q) spRecord.q = q
@@ -131,9 +144,9 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
           검색
         </button>
         {hasFilter && (
-          <a href="/admin/goods" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
+          <Link href="/admin/goods" className="px-4 py-2 rounded-xl text-sm border border-gray-200" style={{ color: '#1C1C1C' }}>
             초기화
-          </a>
+          </Link>
         )}
         <Link href="/admin/goods/new" className="ml-auto px-4 py-2 rounded-xl text-sm text-white" style={{ backgroundColor: '#1C1C1C' }}>
           + 상품 등록
@@ -157,7 +170,7 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
         <tbody>
           {(goods ?? []).map((item) => {
             const finalPrice = Math.round(item.price * (1 - (item.discount_rate ?? 0) / 100))
-            const stockQty = (item as any).stock_quantity ?? 0
+            const stockQty = item.stock_quantity ?? 0
             const status = STATUS_STYLE[item.status] ?? { label: item.status, bg: '#E8E5E0', color: '#1C1C1C' }
             return (
               <tr key={item.id} style={{ borderTop: '1px solid #E8E5E0' }}>
@@ -188,7 +201,7 @@ export default async function AdminGoodsPage({ searchParams }: Props) {
                   {stockQty}
                 </td>
                 <td className="py-3 text-xs" style={{ color: '#6B6862' }}>
-                  {(item.categories as any)?.name ?? '-'}
+                  {item.categories?.name ?? '-'}
                 </td>
                 <td className="py-3">
                   <span

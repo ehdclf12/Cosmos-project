@@ -248,7 +248,7 @@ export default function GoodsForm({ categories, initial }: GoodsFormProps) {
         <label className={lbl} style={{ color: '#1C1C1C' }}>상태</label>
         <select
           value={form.status}
-          onChange={(e) => set('status', e.target.value as any)}
+          onChange={(e) => set('status', e.target.value)}
           className={field}
           style={{ color: '#1C1C1C' }}
         >

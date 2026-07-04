@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import LandingClient from '@/app/landing/LandingClient'
 import { createClient } from '@/lib/supabase/server'
-import GoodsCard from './_components/GoodsCard'
+import GoodsCard, { type GoodsItem } from './_components/GoodsCard'
 import CategoryFilter from './_components/CategoryFilter'
 
 export const metadata: Metadata = { title: 'Goods & Tickets — Cosmos' }
@@ -49,7 +49,7 @@ export default async function GoodsPage({ searchParams }: Props) {
   }
 
   const { data: goodsData } = await query
-  const goods = goodsData ?? []
+  const goods = (goodsData ?? []) as unknown as GoodsItem[]
 
   return (
     <div style={{ backgroundColor: '#F2F1EE', minHeight: '100vh' }}>
@@ -72,7 +72,7 @@ export default async function GoodsPage({ searchParams }: Props) {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
             {goods.map((item) => (
-              <GoodsCard key={item.id} item={item as any} />
+              <GoodsCard key={item.id} item={item} />
             ))}
           </div>
         )}
