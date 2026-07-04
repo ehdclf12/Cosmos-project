@@ -34,6 +34,7 @@ export default async function GoodsPage({ searchParams }: Props) {
   let query = supabase
     .from('goods')
     .select('id, title, description, price, discount_rate, images, status, categories(name, slug)')
+    .eq('is_active', true)
     .or(`published_at.is.null,published_at.lte.${now}`)
     .neq('status', 'draft')
     .order('created_at', { ascending: false })
