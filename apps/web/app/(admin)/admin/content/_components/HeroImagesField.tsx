@@ -6,7 +6,7 @@ import { uploadLandingImage } from './upload'
 
 interface Props {
   value: HeroContent
-  onChange: (v: HeroContent) => void
+  onChange: (updater: (prev: HeroContent) => HeroContent) => void
 }
 
 export default function HeroImagesField({ value, onChange }: Props) {
@@ -18,7 +18,7 @@ export default function HeroImagesField({ value, onChange }: Props) {
     setBusy(true)
     try {
       const url = await uploadLandingImage(file)
-      onChange({ ...value, images: [...value.images, { src: url, alt: '' }] })
+      onChange((prev) => ({ ...prev, images: [...prev.images, { src: url, alt: '' }] }))
     } catch (err) {
       alert(err instanceof Error ? err.message : '업로드 실패')
     } finally {
@@ -27,17 +27,19 @@ export default function HeroImagesField({ value, onChange }: Props) {
   }
 
   function setAlt(i: number, alt: string) {
-    onChange({ ...value, images: value.images.map((im, j) => (j === i ? { ...im, alt } : im)) })
+    onChange((prev) => ({ ...prev, images: prev.images.map((im, j) => (j === i ? { ...im, alt } : im)) }))
   }
   function remove(i: number) {
-    onChange({ ...value, images: value.images.filter((_, j) => j !== i) })
+    onChange((prev) => ({ ...prev, images: prev.images.filter((_, j) => j !== i) }))
   }
   function move(i: number, dir: -1 | 1) {
-    const j = i + dir
-    if (j < 0 || j >= value.images.length) return
-    const arr = [...value.images]
-    ;[arr[i], arr[j]] = [arr[j], arr[i]]
-    onChange({ ...value, images: arr })
+    onChange((prev) => {
+      const j = i + dir
+      if (j < 0 || j >= prev.images.length) return prev
+      const arr = [...prev.images]
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      return { ...prev, images: arr }
+    })
   }
 
   return (
@@ -49,7 +51,7 @@ export default function HeroImagesField({ value, onChange }: Props) {
           min={1}
           step={0.5}
           value={value.intervalMs / 1000}
-          onChange={(e) => onChange({ ...value, intervalMs: Math.max(1, Number(e.target.value) || 1) * 1000 })}
+          onChange={(e) => onChange((prev) => ({ ...prev, intervalMs: Math.max(1, Number(e.target.value) || 1) * 1000 }))}
           className="w-20 border rounded px-2 py-1 text-sm bg-white"
           style={{ borderColor: '#E8E5E0', color: '#1C1C1C' }}
         />
