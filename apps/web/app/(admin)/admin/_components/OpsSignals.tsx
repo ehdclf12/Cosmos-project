@@ -10,7 +10,7 @@ export default function OpsSignals({ lowStock, pendingOrders }: Props) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* 처리 대기 주문 */}
       <Link
-        href="/admin/orders?status=paid"
+        href="/admin/orders"
         className="rounded-2xl p-5 block hover:opacity-90 transition-opacity"
         style={{ backgroundColor: '#1C1C1C' }}
       >

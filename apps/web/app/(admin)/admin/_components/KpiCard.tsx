@@ -4,13 +4,16 @@ export default function KpiCard({
   label,
   value,
   change,
+  higherIsBetter = true,
 }: {
   label: string
   value: string
   change: PctResult
+  higherIsBetter?: boolean
 }) {
   const up = change.pct >= 0
-  const color = change.isNew ? '#6B6862' : up ? '#16a34a' : '#dc2626'
+  const good = up === higherIsBetter
+  const color = change.isNew ? '#6B6862' : good ? '#16a34a' : '#dc2626'
   const text = change.isNew ? '신규' : `${up ? '▲' : '▼'} ${Math.abs(change.pct).toFixed(1)}%`
   return (
     <div className="rounded-2xl p-5" style={{ backgroundColor: '#E8E5E0' }}>

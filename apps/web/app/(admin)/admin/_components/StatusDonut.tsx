@@ -17,7 +17,16 @@ export default function StatusDonut({ data }: { data: { status: string; count: n
   const total = data.reduce((s, d) => s + d.count, 0)
   const R = 42
   const C = 2 * Math.PI * R
-  let offset = 0
+  const segments = data.reduce<{ status: string; count: number; dash: number; offset: number }[]>(
+    (acc, d) => {
+      const prev = acc[acc.length - 1]
+      const offset = prev ? prev.offset + prev.dash : 0
+      const dash = (d.count / total) * C
+      acc.push({ status: d.status, count: d.count, dash, offset })
+      return acc
+    },
+    []
+  )
 
   return (
     <div className="rounded-2xl p-5" style={{ backgroundColor: '#E8E5E0' }}>
@@ -28,26 +37,19 @@ export default function StatusDonut({ data }: { data: { status: string; count: n
         <div className="flex items-center gap-5">
           <svg width="110" height="110" viewBox="0 0 110 110">
             <g transform="rotate(-90 55 55)">
-              {data.map((d) => {
-                const frac = d.count / total
-                const dash = frac * C
-                const seg = (
-                  <circle
-                    key={d.status}
-                    cx="55"
-                    cy="55"
-                    r={R}
-                    fill="none"
-                    stroke={COLORS[d.status] ?? '#C8C5BC'}
-                    strokeWidth="14"
-                    strokeDasharray={`${dash} ${C - dash}`}
-                    strokeDashoffset={-offset}
-                  />
-                )
-                // eslint-disable-next-line react-hooks/immutability
-                offset += dash
-                return seg
-              })}
+              {segments.map((d) => (
+                <circle
+                  key={d.status}
+                  cx="55"
+                  cy="55"
+                  r={R}
+                  fill="none"
+                  stroke={COLORS[d.status] ?? '#C8C5BC'}
+                  strokeWidth="14"
+                  strokeDasharray={`${d.dash} ${C - d.dash}`}
+                  strokeDashoffset={-d.offset}
+                />
+              ))}
             </g>
             <text x="55" y="59" textAnchor="middle" style={{ fontSize: 16, fill: '#1C1C1C' }}>{total}</text>
           </svg>

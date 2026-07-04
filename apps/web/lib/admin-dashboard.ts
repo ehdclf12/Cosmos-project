@@ -43,8 +43,6 @@ type ItemRow = {
 }
 type LowStockRow = { id: string; title: string; stock_quantity: number | null }
 
-const ACTIVE = ['paid', 'preparing', 'shipping', 'delivered'] // 취소 제외
-
 function summarize(rows: OrderRow[]) {
   const active = rows.filter((r) => r.status !== 'cancelled')
   const revenue = active.reduce((s, r) => s + (r.total_amount ?? 0), 0)

@@ -37,7 +37,7 @@ export default async function AdminDashboard({
         <KpiCard label="총 매출" value={`₩${d.kpis.revenue.value.toLocaleString()}`} change={d.kpis.revenue.change} />
         <KpiCard label="주문수" value={`${d.kpis.orders.value.toLocaleString()}건`} change={d.kpis.orders.change} />
         <KpiCard label="평균 주문가" value={`₩${d.kpis.aov.value.toLocaleString()}`} change={d.kpis.aov.change} />
-        <KpiCard label="취소율" value={`${d.kpis.cancelRate.value.toFixed(1)}%`} change={d.kpis.cancelRate.change} />
+        <KpiCard label="취소율" value={`${d.kpis.cancelRate.value.toFixed(1)}%`} change={d.kpis.cancelRate.change} higherIsBetter={false} />
       </div>
 
       {/* 매출 추세 */}
