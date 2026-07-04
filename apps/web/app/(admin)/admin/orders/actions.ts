@@ -5,33 +5,11 @@ import { createAdminClient } from '@/lib/supabase/admin-client'
 export async function updateOrderStatus(orderId: string, newStatus: string) {
   const admin = createAdminClient()
 
-  if (newStatus === 'cancelled') {
-    // 취소 시: active 아이템을 먼저 모두 취소 처리 (재고 복원 포함)
-    // → 이후 order.status 변경 시 트리거가 복원할 active 아이템이 0개가 됨
-    const { data: activeItems } = await admin
-      .from('order_items')
-      .select('goods_id, quantity')
-      .eq('order_id', orderId)
-      .eq('status', 'active')
-
-    if (activeItems && activeItems.length > 0) {
-      // atomic: active인 아이템만 cancelled로 변경
-      await admin
-        .from('order_items')
-        .update({ status: 'cancelled' })
-        .eq('order_id', orderId)
-        .eq('status', 'active')
-
-      // 각 아이템 재고 복원 (개별 취소된 아이템은 이미 제외됨)
-      await Promise.all(
-        activeItems.map((item) =>
-          admin.rpc('restore_stock', { p_goods_id: item.goods_id, p_quantity: item.quantity })
-        )
-      )
-    }
-  }
-
-  // order status 변경 (취소 시 트리거는 active 아이템 0개 → 추가 복원 없음)
+  // 상태만 변경한다. 재고 처리는 restore_stock_on_cancel 트리거가 담당:
+  //   → cancelled : active 아이템 재고 복원 (개별취소된 아이템은 이미 복원돼 제외)
+  //   cancelled → : active 아이템 재고 재차감 (취소 되돌리기)
+  // 아이템 status를 앱에서 건드리지 않으므로 고객 취소 경로와 동작이 통일되고,
+  // 되돌리기 시에도 트리거가 대칭적으로 재차감한다.
   const { error } = await admin.from('orders').update({ status: newStatus }).eq('id', orderId)
   if (error) return { error: error.message }
 

@@ -123,6 +123,31 @@ export default function CheckoutForm({ userId, directItem }: Props) {
     setLoading(true)
     const supabase = createClient()
 
+    // 1. 재고 선점 — 조건부 차감(재고 충분할 때만 성공). 부족하면 주문을 만들지 않고 이미 차감한 것 롤백.
+    const decremented: CartItem[] = []
+    async function rollbackStock() {
+      await Promise.all(
+        decremented.map((d) =>
+          supabase.rpc('restore_stock', { p_goods_id: d.goodsId, p_quantity: d.quantity })
+        )
+      )
+    }
+    for (const item of selectedItems) {
+      const { data: ok, error: decErr } = await supabase.rpc('decrement_stock', {
+        p_goods_id: item.goodsId,
+        p_quantity: item.quantity,
+      })
+      // ok === false: 재고 부족(019 적용 후). ok === null: 구버전 함수(019 미적용) → 통과(기존 동작 유지).
+      if (decErr || ok === false) {
+        await rollbackStock()
+        setError(`재고가 부족한 상품이 있습니다: ${item.title}`)
+        setLoading(false)
+        return
+      }
+      decremented.push(item)
+    }
+
+    // 2. 주문 생성
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .insert({
@@ -138,11 +163,13 @@ export default function CheckoutForm({ userId, directItem }: Props) {
       .single()
 
     if (orderError || !order) {
+      await rollbackStock()
       setError('주문 처리 중 오류가 발생했습니다.')
       setLoading(false)
       return
     }
 
+    // 3. 주문 항목 저장
     const { error: itemsError } = await supabase.from('order_items').insert(
       selectedItems.map((item: CartItem) => ({
         order_id: order.id,
@@ -156,16 +183,11 @@ export default function CheckoutForm({ userId, directItem }: Props) {
 
     if (itemsError) {
       await supabase.from('orders').delete().eq('id', order.id)
+      await rollbackStock()
       setError('주문 항목 저장 중 오류가 발생했습니다.')
       setLoading(false)
       return
     }
-
-    await Promise.all(
-      selectedItems.map((item: CartItem) =>
-        supabase.rpc('decrement_stock', { p_goods_id: item.goodsId, p_quantity: item.quantity })
-      )
-    )
 
     if (!isDirectBuy) {
       // 주문한 항목만 장바구니에서 제거
