@@ -5,6 +5,9 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin-client'
 import OrderStatusSelect from '../_components/OrderStatusSelect'
 import AdminCancelItemButton from './_components/AdminCancelItemButton'
+import { classifyRecipient, courierLabel, trackingUrl } from '@cosmos/shared'
+import ShipmentForm from './_components/ShipmentForm'
+import WaybillInfo from './_components/WaybillInfo'
 
 export const metadata: Metadata = { title: '주문 상세 — Cosmos Admin' }
 
@@ -18,6 +21,8 @@ type OrderDetail = {
   recipient_phone: string | null
   shipping_address: string | null
   memo: string | null
+  courier: string | null
+  tracking_number: string | null
   order_items: { id: string; title: string; quantity: number; price: number; status: string }[]
 }
 
@@ -33,6 +38,7 @@ export default async function OrderDetailPage({ params }: Props) {
     .select(`
       id, status, total_amount, created_at, user_id,
       recipient_name, recipient_phone, shipping_address, memo,
+      courier, tracking_number,
       order_items(id, title, quantity, price, status)
     `)
     .eq('id', id)
@@ -52,13 +58,18 @@ export default async function OrderDetailPage({ params }: Props) {
   const registeredPhone: string | null =
     profile?.phone ?? (authUser?.user_metadata?.phone as string | undefined) ?? null
 
-  // 수령인 이름·연락처 중 하나라도 주문자와 다르면 타인 배송으로 판단
-  const normalize = (p: string) => p.replace(/\D/g, '')
-  const nameDiffers = profile?.display_name && order.recipient_name &&
-    profile.display_name !== order.recipient_name
-  const phoneDiffers = registeredPhone && order.recipient_phone &&
-    normalize(registeredPhone) !== normalize(order.recipient_phone)
-  const isThirdPartyDelivery = !!(nameDiffers || phoneDiffers)
+  const relation = classifyRecipient({
+    ordererName: profile?.display_name ?? null,
+    ordererPhone: registeredPhone,
+    recipientName: order.recipient_name,
+    recipientPhone: order.recipient_phone,
+  })
+  const relationBadge =
+    relation === 'other'
+      ? { label: '타인 수령 (선물·대리)', bg: '#dbeafe', color: '#2563eb' }
+      : relation === 'unknown'
+      ? { label: '수령인 확인 필요', bg: '#FEF9C3', color: '#854D0E' }
+      : { label: '본인 수령', bg: '#E8E5E0', color: '#6B6862' }
 
   const items = order.order_items ?? []
   const activeItems = items.filter((i) => i.status !== 'cancelled')
@@ -192,14 +203,12 @@ export default async function OrderDetailPage({ params }: Props) {
       <section>
         <div className="flex items-center gap-3 mb-3">
           <h2 className="text-sm font-medium" style={{ color: '#1C1C1C' }}>배송 정보</h2>
-          {isThirdPartyDelivery && (
-            <span
-              className="text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: '#dbeafe', color: '#2563eb' }}
-            >
-              타인 배송
-            </span>
-          )}
+          <span
+            className="text-xs px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: relationBadge.bg, color: relationBadge.color }}
+          >
+            {relationBadge.label}
+          </span>
         </div>
         <div className="rounded-2xl p-5 space-y-2" style={{ backgroundColor: '#E8E5E0' }}>
           <div className="flex items-center justify-between">
@@ -222,6 +231,56 @@ export default async function OrderDetailPage({ params }: Props) {
           )}
         </div>
       </section>
+
+      {/* 배송 처리 */}
+      {order.status !== 'cancelled' && (
+        <section className="mt-8">
+          <h2 className="text-sm font-medium mb-3" style={{ color: '#1C1C1C' }}>배송 처리</h2>
+          <div className="rounded-2xl p-5" style={{ backgroundColor: '#E8E5E0' }}>
+            {(order.status === 'paid' || order.status === 'preparing') ? (
+              <ShipmentForm orderId={order.id} mode="ship" />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" style={{ color: '#1C1C1C' }}>
+                  <span>택배사: <strong>{courierLabel(order.courier)}</strong></span>
+                  <span>송장번호: <strong>{order.tracking_number ?? '-'}</strong></span>
+                  {trackingUrl(order.courier, order.tracking_number) && (
+                    <a
+                      href={trackingUrl(order.courier, order.tracking_number)!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs px-3 py-1 rounded-lg text-white"
+                      style={{ backgroundColor: '#1C1C1C' }}
+                    >
+                      배송조회
+                    </a>
+                  )}
+                </div>
+                <details>
+                  <summary className="text-xs cursor-pointer" style={{ color: '#6B6862' }}>송장 수정</summary>
+                  <div className="mt-2">
+                    <ShipmentForm orderId={order.id} mode="edit" initialCourier={order.courier} initialTracking={order.tracking_number} />
+                  </div>
+                </details>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* 송장용 정보 */}
+      {order.status !== 'cancelled' && (
+        <section className="mt-8">
+          <WaybillInfo
+            recipientName={order.recipient_name}
+            recipientPhone={order.recipient_phone}
+            shippingAddress={order.shipping_address}
+            items={order.order_items.filter((i) => i.status !== 'cancelled').map((i) => ({ title: i.title, quantity: i.quantity }))}
+            orderNo={order.id.slice(0, 8).toUpperCase()}
+            isOther={relation === 'other'}
+          />
+        </section>
+      )}
     </div>
   )
 }
