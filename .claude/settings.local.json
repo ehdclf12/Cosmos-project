@@ -123,7 +123,8 @@
       "Bash(/usr/local/bin/npx tsc *)",
       "Bash(/Users/cosmos/.local/node/bin/npx tsc *)",
       "Bash(pnpm --filter web tsc --noEmit)",
-      "Bash(xargs ls)"
+      "Bash(xargs ls)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }
