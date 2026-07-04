@@ -8,9 +8,11 @@ export default function ToggleActiveButton({ id, isActive }: { id: string; isAct
   const [busy, setBusy] = useState(false)
 
   async function toggle() {
+    const next = !isActive
+    if (!confirm(`상품을 ${next ? '노출' : '미노출'}로 변경하시겠습니까?`)) return
     setBusy(true)
     const supabase = createClient()
-    const { error } = await supabase.from('goods').update({ is_active: !isActive }).eq('id', id)
+    const { error } = await supabase.from('goods').update({ is_active: next }).eq('id', id)
     setBusy(false)
     if (error) {
       alert('노출 상태 변경 실패: ' + error.message)
