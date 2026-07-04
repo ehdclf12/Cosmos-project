@@ -134,7 +134,8 @@
       "Bash(sed -n '79,163p' .superpowers/sdd/task-1-brief.md)",
       "Read(//tmp/**)",
       "Bash(sed -n '15,65p' .superpowers/sdd/task-1-brief.md)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); const d={...p.dependencies,...p.devDependencies}; console.log\\('tailwindcss:', d.tailwindcss||'?'\\); console.log\\('@tailwindcss/postcss:', d['@tailwindcss/postcss']||'-'\\)\")"
     ]
   }
 }
