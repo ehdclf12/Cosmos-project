@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router'
 import { useState, useEffect } from 'react'
 import { useClubs, useMyClubs } from '@cosmos/shared'
 import type { Club } from '@cosmos/shared'
-import { supabase } from '../../../../lib/supabase'
+import { supabase } from '../../../lib/supabase'
 
 const ACCESS_LABELS = { public: '공개', private: '비공개', invite_only: '초대 전용' } as const
 

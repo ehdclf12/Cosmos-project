@@ -1,8 +1,10 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { isAdmin, FORBIDDEN } from '@/lib/require-admin'
 
 export async function addCategory(name: string) {
+  if (!(await isAdmin())) return FORBIDDEN
   if (!name.trim()) return { error: '카테고리명을 입력해주세요.' }
   try {
     const supabase = await createClient()
@@ -17,6 +19,7 @@ export async function addCategory(name: string) {
 }
 
 export async function deactivateCategory(id: string) {
+  if (!(await isAdmin())) return FORBIDDEN
   try {
     const supabase = await createClient()
     const { error } = await supabase.from('categories').update({ is_active: false }).eq('id', id)
@@ -30,6 +33,7 @@ export async function deactivateCategory(id: string) {
 }
 
 export async function activateCategory(id: string) {
+  if (!(await isAdmin())) return FORBIDDEN
   try {
     const supabase = await createClient()
     const { error } = await supabase.from('categories').update({ is_active: true }).eq('id', id)

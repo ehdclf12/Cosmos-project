@@ -1,1 +1,19 @@
+# 의존성
 node_modules
+
+# 빌드 산출물 / 캐시
+.next
+.turbo
+dist
+*.tsbuildinfo
+
+# 환경변수
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+
+# 로컬 런타임 데이터 (n8n sqlite 등 — 계정 정보가 들어갈 수 있어 커밋하지 않는다)
+n8n_data/

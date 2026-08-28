@@ -8,7 +8,7 @@ import {
   useClubMembers, useApproveMember, useRejectMember, useUpdateMemberRole, useRemoveMember,
 } from '@cosmos/shared'
 import type { ClubPost, ClubMeetup, ClubMember, MeetupAttendanceStatus } from '@cosmos/shared'
-import { supabase } from '../../../../lib/supabase'
+import { supabase } from '../../../lib/supabase'
 
 type Tab = 'feed' | 'meetups' | 'members'
 

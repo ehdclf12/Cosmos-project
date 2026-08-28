@@ -132,15 +132,10 @@ export default function CheckoutForm({ userId, directItem }: Props) {
     const supabase = createClient()
     const shippingAddress = `(${zonecode}) ${baseAddress} ${detailAddress.trim()}`
 
-    // === 1순위: place_order RPC — 재고차감+주문+항목을 단일 트랜잭션으로 원자 처리 ===
-    const { data: placedId, error: rpcError } = await supabase.rpc('place_order', {
-      p_items: selectedItems.map((i) => ({
-        goods_id: i.goodsId,
-        title: i.title,
-        price: i.price,
-        image_url: i.imageUrl,
-        quantity: i.quantity,
-      })),
+    // 재고차감 + 주문 + 항목을 단일 트랜잭션으로 원자 처리.
+    // 가격·상품명·이미지는 서버(goods 테이블)가 결정한다 — 클라이언트는 무엇을 몇 개 살지만 보낸다.
+    const { data: placedId, error: rpcError } = await supabase.rpc('place_order_v2', {
+      p_items: selectedItems.map((i) => ({ goods_id: i.goodsId, quantity: i.quantity })),
       p_recipient_name: recipientName.trim(),
       p_recipient_phone: recipientPhone.trim(),
       p_shipping_address: shippingAddress,
@@ -151,89 +146,21 @@ export default function CheckoutForm({ userId, directItem }: Props) {
       completeOrder(String(placedId))
       return
     }
-    if (rpcError && /INSUFFICIENT_STOCK/.test(rpcError.message)) {
-      const title = rpcError.message.split('INSUFFICIENT_STOCK:')[1]?.trim()
+
+    // 실패 시 폴백 없이 중단한다. 브라우저가 orders/order_items를 직접 쓰던 예전 경로는
+    // 총액을 클라이언트가 정할 수 있어 제거했다(마이그레이션 023에서 권한도 회수).
+    const msg = rpcError?.message ?? ''
+    if (/INSUFFICIENT_STOCK/.test(msg)) {
+      const title = msg.split('INSUFFICIENT_STOCK:')[1]?.trim()
       setError(`재고가 부족한 상품이 있습니다${title ? `: ${title}` : ''}.`)
-      setLoading(false)
-      return
-    }
-    // place_order 미배포(함수 없음)면 아래 폴백으로, 그 외 에러는 중단
-    const fnMissing =
-      rpcError?.code === 'PGRST202' ||
-      /find the function|does not exist|schema cache/i.test(rpcError?.message ?? '')
-    if (rpcError && !fnMissing) {
+    } else if (/NOT_PURCHASABLE/.test(msg)) {
+      setError('현재 구매할 수 없는 상품이 포함되어 있습니다. 장바구니를 확인해주세요.')
+    } else if (/INVALID_QUANTITY/.test(msg)) {
+      setError('주문 수량이 올바르지 않습니다.')
+    } else {
       setError('주문 처리 중 오류가 발생했습니다.')
-      setLoading(false)
-      return
     }
-
-    // === 폴백(place_order 미배포 시): 기존 다단계 플로우 (decrement-first + rollback) ===
-    const decremented: CartItem[] = []
-    async function rollbackStock() {
-      await Promise.all(
-        decremented.map((d) =>
-          supabase.rpc('restore_stock', { p_goods_id: d.goodsId, p_quantity: d.quantity })
-        )
-      )
-    }
-    for (const item of selectedItems) {
-      const { data: ok, error: decErr } = await supabase.rpc('decrement_stock', {
-        p_goods_id: item.goodsId,
-        p_quantity: item.quantity,
-      })
-      // ok === false: 재고 부족(019 적용 후). ok === null: 구버전 함수(019 미적용) → 통과(기존 동작 유지).
-      if (decErr || ok === false) {
-        await rollbackStock()
-        setError(`재고가 부족한 상품이 있습니다: ${item.title}`)
-        setLoading(false)
-        return
-      }
-      decremented.push(item)
-    }
-
-    // 2. 주문 생성
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        user_id: userId,
-        status: 'paid',
-        total_amount: totalAmount,
-        recipient_name: recipientName.trim(),
-        recipient_phone: recipientPhone.trim(),
-        shipping_address: shippingAddress,
-        memo: memo.trim() || null,
-      })
-      .select('id')
-      .single()
-
-    if (orderError || !order) {
-      await rollbackStock()
-      setError('주문 처리 중 오류가 발생했습니다.')
-      setLoading(false)
-      return
-    }
-
-    // 3. 주문 항목 저장
-    const { error: itemsError } = await supabase.from('order_items').insert(
-      selectedItems.map((item: CartItem) => ({
-        order_id: order.id,
-        goods_id: item.goodsId,
-        title: item.title,
-        price: item.price,
-        image_url: item.imageUrl,
-        quantity: item.quantity,
-      }))
-    )
-
-    if (itemsError) {
-      await supabase.from('orders').delete().eq('id', order.id)
-      await rollbackStock()
-      setError('주문 항목 저장 중 오류가 발생했습니다.')
-      setLoading(false)
-      return
-    }
-
-    completeOrder(order.id)
+    setLoading(false)
   }
 
   if (!isDirectBuy && cartItems.length === 0) return null

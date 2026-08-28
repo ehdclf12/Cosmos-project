@@ -1,8 +1,15 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin-client'
+import { isAdmin, FORBIDDEN } from '@/lib/require-admin'
+
+// 셀렉트에서 고를 수 있는 상태. '배송중'은 shipOrder(송장 입력)로만 진입한다.
+const ALLOWED_STATUSES = ['paid', 'preparing', 'delivered', 'cancelled']
 
 export async function updateOrderStatus(orderId: string, newStatus: string) {
+  if (!(await isAdmin())) return FORBIDDEN
+  if (!ALLOWED_STATUSES.includes(newStatus)) return { error: '유효하지 않은 주문 상태입니다.' }
+
   const admin = createAdminClient()
 
   // 상태만 변경한다. 재고 처리는 restore_stock_on_cancel 트리거가 담당:

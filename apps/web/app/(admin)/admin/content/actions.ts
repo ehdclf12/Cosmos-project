@@ -1,9 +1,11 @@
 'use server'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { isAdmin, FORBIDDEN } from '@/lib/require-admin'
 import type { LandingContent } from '@cosmos/shared'
 
 export async function saveDraft(data: LandingContent): Promise<{ error?: string }> {
+  if (!(await isAdmin())) return FORBIDDEN
   const supabase = await createClient()
   const { error } = await supabase
     .from('site_content')
@@ -12,6 +14,7 @@ export async function saveDraft(data: LandingContent): Promise<{ error?: string 
 }
 
 export async function publish(): Promise<{ error?: string }> {
+  if (!(await isAdmin())) return FORBIDDEN
   const supabase = await createClient()
   const { data: draft, error: readErr } = await supabase
     .from('site_content')

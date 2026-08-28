@@ -33,50 +33,22 @@ export async function cancelOrder(orderId: string) {
 
 export async function cancelOrderItem(orderId: string, itemId: string) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: '로그인이 필요합니다.' }
 
-  // 주문 소유권 + 상태 확인
-  const { data: order } = await supabase
-    .from('orders')
-    .select('status, user_id')
-    .eq('id', orderId)
-    .single()
+  // 소유권 확인 + 상태 검증 + 아이템 취소 + 재고 복원을 단일 RPC(023)에서 원자 처리한다.
+  // 예전처럼 restore_stock을 직접 호출하지 않는다 — 그 함수는 소유권 검사가 없어 앱 롤에서 회수했다.
+  const { error } = await supabase.rpc('cancel_own_order_item', {
+    p_order_id: orderId,
+    p_item_id: itemId,
+  })
 
-  if (!order) return { error: '주문을 찾을 수 없습니다.' }
-  if (order.user_id !== user.id) return { error: '권한이 없습니다.' }
-  if (!['paid', 'preparing'].includes(order.status)) {
-    return { error: '배송이 시작된 주문은 취소할 수 없습니다.' }
-  }
-
-  // status='active' 조건 포함 atomic UPDATE — 동시 요청 시 한 번만 성공
-  const { data: updated, error: updateError } = await supabase
-    .from('order_items')
-    .update({ status: 'cancelled' })
-    .eq('id', itemId)
-    .eq('order_id', orderId)
-    .eq('status', 'active')
-    .select('goods_id, quantity')
-
-  if (updateError) return { error: updateError.message }
-  if (!updated || updated.length === 0) return { error: '이미 취소된 상품입니다.' }
-
-  // UPDATE 성공한 경우에만 재고 복원 (이중 복원 방지)
-  await supabase.rpc('restore_stock', { p_goods_id: updated[0].goods_id, p_quantity: updated[0].quantity })
-
-  // 모든 아이템이 취소됐으면 주문 전체 취소 처리
-  const { data: remaining } = await supabase
-    .from('order_items')
-    .select('id')
-    .eq('order_id', orderId)
-    .eq('status', 'active')
-
-  if (!remaining || remaining.length === 0) {
-    // 트리거가 active 아이템만 복원하므로 이 시점엔 이미 모두 처리됨 → status만 변경
-    await supabase
-      .from('orders')
-      .update({ status: 'cancelled' })
-      .eq('id', orderId)
+  if (error) {
+    const m = error.message
+    if (/AUTH_REQUIRED/.test(m)) return { error: '로그인이 필요합니다.' }
+    if (/ORDER_NOT_FOUND/.test(m)) return { error: '주문을 찾을 수 없습니다.' }
+    if (/FORBIDDEN/.test(m)) return { error: '권한이 없습니다.' }
+    if (/NOT_CANCELLABLE/.test(m)) return { error: '배송이 시작된 주문은 취소할 수 없습니다.' }
+    if (/ALREADY_CANCELLED/.test(m)) return { error: '이미 취소된 상품입니다.' }
+    return { error: '취소 처리 중 오류가 발생했습니다.' }
   }
 
   revalidatePath(`/orders/${orderId}`)

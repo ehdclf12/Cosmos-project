@@ -1,6 +1,7 @@
 'use server'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isAdmin, FORBIDDEN } from '@/lib/require-admin'
 
 interface GoodsPayload {
   title: string
@@ -15,6 +16,7 @@ interface GoodsPayload {
 }
 
 export async function saveGoods(id: string | null, payload: GoodsPayload, imagesToDelete: string[] = []) {
+  if (!(await isAdmin())) return FORBIDDEN
   const supabase = await createClient()
   const { error } = id
     ? await supabase.from('goods').update(payload).eq('id', id)
